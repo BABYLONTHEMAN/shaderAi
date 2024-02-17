@@ -1,0 +1,6 @@
+﻿  gl.c
+  klpa.cpp
+C:\Users\babyl\source\repos\codezero\gladSDLbegin\2\gladSdl\gladSdl\klpa.cpp(2,10): fatal  error C1083: Cannot open include file: 'SDL.h': No such file or directory
+  Transform.cpp
+C:\Users\babyl\source\repos\codezero\gladSDLbegin\2\gladSdl\gladSdl\Transform.cpp(1,10): fatal  error C1083: Cannot open include file: 'gtc\matrix_transform.hpp': No such file or directory
+  Generating Code...

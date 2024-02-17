@@ -1,0 +1,23 @@
+﻿  gl.c
+  klpa.cpp
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(560,16): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 1 has type 'GLchar *'
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(560,16): warning C4473: 'printf' : not enough arguments passed for format string
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(560,16): message : placeholders and their parameters expect 2 variadic arguments, but 1 were provided
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(560,16): message : the missing variadic argument 2 is required by format string '%s'
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(570,16): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 1 has type 'GLchar *'
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(570,16): warning C4473: 'printf' : not enough arguments passed for format string
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(570,16): message : placeholders and their parameters expect 2 variadic arguments, but 1 were provided
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(570,16): message : the missing variadic argument 2 is required by format string '%s'
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(969,16): warning C4101: 'event': unreferenced local variable
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(1392,32): warning C4244: 'initializing': conversion from 'Uint32' to 'float', possible loss of data
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(1523,23): warning C4101: 'position': unreferenced local variable
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(1591,27): warning C4244: 'initializing': conversion from 'Sint32' to 'float', possible loss of data
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(1592,27): warning C4244: 'initializing': conversion from 'Sint32' to 'float', possible loss of data
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(1603,50): warning C4244: 'argument': conversion from 'Sint32' to 'float', possible loss of data
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(1611,30): warning C4244: '=': conversion from 'Sint32' to 'float', possible loss of data
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(1612,30): warning C4244: '=': conversion from 'Sint32' to 'float', possible loss of data
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(1619,26): warning C4244: '=': conversion from 'Sint32' to 'float', possible loss of data
+C:\Users\babyl\Desktop\2 - Copy\gladSdl\gladSdl\klpa.cpp(1620,26): warning C4244: '=': conversion from 'Sint32' to 'float', possible loss of data
+  Transform.cpp
+  Generating Code...
+  gladSdl.vcxproj -> C:\Users\babyl\Desktop\2 - Copy\gladSdl\Debug\gladSdl.exe
