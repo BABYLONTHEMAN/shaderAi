@@ -34,7 +34,7 @@ static const char* fShader = "Shaders/shader.frag";
 class shaderAi
 {
 public:
-    enum class JoryShader {VERTEX_SHADER,FRAGMENT_SHADER};
+    enum class JoryShader { VERTEX_SHADER, FRAGMENT_SHADER, TESS_CONTROL_SHADER, TESS_EVALUATION_SHADER };
 
 public:
     static shaderAi* daspeka();
@@ -42,7 +42,7 @@ public:
 public:
     bool drwstkaProgram();
     bool drwstkaShader();
-    
+
     bool koikarawaShader(const std::string& nawiFile, JoryShader joryShader);
     void bilkenaShader();
     bool bibastawaShader();
@@ -50,7 +50,19 @@ public:
     void jyaikarawaShader();
     void lanawyBaraShader();
     void lanawyBaraProgram();
-
+    GLuint getShaderId(JoryShader shaderType);
+    void setBool(const std::string& name, bool value) const;
+    void setInt(const std::string& name, int value) const;
+    void setFloat(const std::string& name, float value) const;
+    void setVec2(const std::string& name, const glm::vec2& value) const;
+    void setVec2(const std::string& name, float x, float y) const;
+    void setVec3(const std::string& name, const glm::vec3& value) const;
+    void setVec3(const std::string& name, float x, float y, float z) const;
+    void setVec4(const std::string& name, const glm::vec4& value) const;
+    void setVec4(const std::string& name, float x, float y, float z, float w);
+    void setMat2(const std::string& name, const glm::mat2& mat) const;
+    void setMat3(const std::string& name, const glm::mat3& mat) const;
+    void setMat4(const std::string& name, const glm::mat4& mat) const;
 private:
     shaderAi();
     shaderAi(const shaderAi&);
@@ -59,6 +71,9 @@ private:
     GLuint m_IdprogramyShaderaka;
     GLuint m_IdVertexyShader;
     GLuint m_IdFragmentyShader;
+    GLuint m_IdTessellEvaShader;
+    GLuint m_IdTessCtrlShader;
+
 
 };
 
@@ -71,10 +86,13 @@ shaderAi* shaderAi::daspeka()
 }
 
 shaderAi::shaderAi()
-{ 
+{
     m_IdprogramyShaderaka = 0;
     m_IdVertexyShader = 0;
     m_IdFragmentyShader = 0;
+    m_IdTessellEvaShader = 0;
+    m_IdTessCtrlShader = 0;
+
 
 }
 
@@ -92,7 +110,7 @@ bool shaderAi::drwstkaProgram()
 
 bool shaderAi::drwstkaShader()
 {
-    m_IdVertexyShader =glCreateShader(GL_VERTEX_SHADER);
+    m_IdVertexyShader = glCreateShader(GL_VERTEX_SHADER);
 
     if (m_IdVertexyShader == 0)
     {
@@ -100,10 +118,23 @@ bool shaderAi::drwstkaShader()
         return false;
     }
     m_IdFragmentyShader = glCreateShader(GL_FRAGMENT_SHADER);
-    
+
     if (m_IdFragmentyShader == 0)
     {
         std::cout << "\n err (m_IdFragmentyShader)y drwstkaShader \n";
+        return false;
+    }
+    m_IdTessellEvaShader = glCreateShader(GL_TESS_EVALUATION_SHADER);
+    if (m_IdTessellEvaShader == 0)
+    {
+        std::cout << "\n err (m_IdTessellEvaShader)y drwstkaShader \n";
+        return false;
+    }
+    m_IdTessCtrlShader = glCreateShader(GL_TESS_CONTROL_SHADER);
+
+    if (m_IdTessCtrlShader == 0)
+    {
+        std::cout << "\n err (m_IdTessCtrlShader)y drwstkaShader \n";
         return false;
     }
     return true;
@@ -116,18 +147,42 @@ bool shaderAi::koikarawaShader(const std::string& nawiFile, JoryShader joryShade
     std::string sarchawayCode;
     GLuint idShader;
 
-    idShader = (joryShader == JoryShader::VERTEX_SHADER)? m_IdVertexyShader : m_IdFragmentyShader;
+    //idShader = (joryShader == JoryShader::VERTEX_SHADER)? m_IdVertexyShader : m_IdFragmentyShader;
+
+    switch (joryShader) {
+    case JoryShader::VERTEX_SHADER:
+        idShader = m_IdVertexyShader;
+        std::cout << "\n  idShader = m_IdVertexyShader; \n";
+        break;
+    case JoryShader::FRAGMENT_SHADER:
+        idShader = m_IdFragmentyShader;
+        std::cout << "\n  idShader = m_IdFragmentyShader;\n";
+        break;
+    case JoryShader::TESS_CONTROL_SHADER:
+        idShader = m_IdTessCtrlShader;
+        std::cout << "\n  idShader = m_IdTessCtrlShader;\n";
+        break;
+    case JoryShader::TESS_EVALUATION_SHADER:
+        idShader = m_IdTessellEvaShader;
+        std::cout << "\n idShader = m_IdTessellEvaShader;\n";
+        break;
+    default:
+        std::cout << "\n Invalid shader type \n";
+        return false; // Return false for error case
+        //return 0; // Return 0 or handle error case
+    }
+
     file.open(nawiFile);
 
 
     if (!file)
     {
-        std::cout << "\n err xwendnaway filey shader (file.open(nawiFile) ... leraya err haya) : "<<nawiFile;
+        std::cout << "\n err xwendnaway filey shader (file.open(nawiFile) ... leraya err haya) : " << nawiFile;
     }
 
-    while (!file.eof()) 
+    while (!file.eof())
     {
-        std::getline(file,text);
+        std::getline(file, text);
         sarchawayCode += text + "\n";
     }
 
@@ -139,17 +194,17 @@ bool shaderAi::koikarawaShader(const std::string& nawiFile, JoryShader joryShade
     glCompileShader(idShader);
     GLint halayCode;
     glGetShaderiv(idShader, GL_COMPILE_STATUS, &halayCode);
-    if (halayCode == GL_TRUE) 
+    if (halayCode == GL_TRUE)
     {
         std::cout << "\n kokrdnaway shader sarkawtw bw \n";
     }
-    else 
+    else
     {
         GLchar errMsg[1000];
         GLsizei errSize = 1000;
 
-        glGetShaderInfoLog(idShader,errSize,&errSize,errMsg);
-        std::cout << "\n "<<errMsg<< "\n ";
+        glGetShaderInfoLog(idShader, errSize, &errSize, errMsg);
+        std::cout << "\n " << errMsg << "\n ";
 
 
 
@@ -163,6 +218,8 @@ void shaderAi::bilkenaShader() //bilkenaShader ---=====wata> Attach...
 {
     glAttachShader(m_IdprogramyShaderaka, m_IdVertexyShader);
     glAttachShader(m_IdprogramyShaderaka, m_IdFragmentyShader);
+    glAttachShader(m_IdprogramyShaderaka, m_IdTessCtrlShader);
+    glAttachShader(m_IdprogramyShaderaka, m_IdTessellEvaShader);
 }
 
 bool shaderAi::bibastawaShader()
@@ -194,12 +251,17 @@ void shaderAi::jyaikarawaShader() //jyaikarawaShader ---=====wata> Detach...
 {
     glDetachShader(m_IdprogramyShaderaka, m_IdVertexyShader);
     glDetachShader(m_IdprogramyShaderaka, m_IdFragmentyShader);
+    glDetachShader(m_IdprogramyShaderaka, m_IdTessCtrlShader);
+    glDetachShader(m_IdprogramyShaderaka, m_IdTessellEvaShader);
 }
 
 void shaderAi::lanawyBaraShader() //lanawyBaraShader ---=====wata> Delete...
 {
     glDeleteShader(m_IdVertexyShader);
     glDeleteShader(m_IdFragmentyShader);
+    glDeleteShader(m_IdTessCtrlShader);
+    glDeleteShader(m_IdTessellEvaShader);
+
 
 }
 
@@ -208,6 +270,66 @@ void shaderAi::lanawyBaraProgram()
     glDeleteProgram(m_IdprogramyShaderaka);
 }
 
+
+//set w met 
+void shaderAi::setBool(const std::string& name, bool value) const
+{
+    glUniform1i(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), (int)value);
+}
+// ------------------------------------------------------------------------
+void shaderAi::setInt(const std::string& name, int value) const
+{
+    glUniform1i(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), value);
+}
+// ------------------------------------------------------------------------
+void shaderAi::setFloat(const std::string& name, float value) const
+{
+    glUniform1f(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), value);
+}
+// ------------------------------------------------------------------------
+void shaderAi::setVec2(const std::string& name, const glm::vec2& value) const
+{
+    glUniform2fv(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), 1, &value[0]);
+}
+void shaderAi::setVec2(const std::string& name, float x, float y) const
+{
+    glUniform2f(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), x, y);
+}
+// ------------------------------------------------------------------------
+void shaderAi::setVec3(const std::string& name, const glm::vec3& value) const
+{
+    glUniform3fv(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), 1, &value[0]);
+}
+void shaderAi::setVec3(const std::string& name, float x, float y, float z) const
+{
+    glUniform3f(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), x, y, z);
+}
+// ------------------------------------------------------------------------
+void shaderAi::setVec4(const std::string& name, const glm::vec4& value) const
+{
+    glUniform4fv(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), 1, &value[0]);
+}
+void shaderAi::setVec4(const std::string& name, float x, float y, float z, float w)
+{
+    glUniform4f(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), x, y, z, w);
+}
+// ------------------------------------------------------------------------
+void shaderAi::setMat2(const std::string& name, const glm::mat2& mat) const
+{
+    glUniformMatrix2fv(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+}
+// ------------------------------------------------------------------------
+void shaderAi::setMat3(const std::string& name, const glm::mat3& mat) const
+{
+    glUniformMatrix3fv(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+}
+// ------------------------------------------------------------------------
+void shaderAi::setMat4(const std::string& name, const glm::mat4& mat) const
+{
+    glUniformMatrix4fv(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+
+}
+//set w met </>
 //</shaderAi.cpp>
 
 
@@ -258,133 +380,78 @@ public:
     void checkCompileErrors(GLuint shader, std::string type);
 };
 
- std::vector<Shader> shaderList;
+std::vector<Shader> shaderList;
 //()_()_()_()_()_()_()_()_()_</shader.h>_()_()_()_()_()_()_()_()_()_()
 
 //()_()_()_()_()_()_()_()_()_()_()_shader.cpp()_()_()_()_()_()_()_()_()
 
  //()()()()()()()()()()()()()()()()(
- void Shader::use()
-         {
-             glUseProgram(ID);
-         }
-         // utility uniform functions
-         // ------------------------------------------------------------------------
-         void Shader::setBool(const std::string& name, bool value) const
-         {
-             glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
-         }
-         // ------------------------------------------------------------------------
-         void Shader::setInt(const std::string& name, int value) const
-         {
-             glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
-         }
-         // ------------------------------------------------------------------------
-         void Shader::setFloat(const std::string& name, float value) const
-         {
-             glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
-         }
-         // ------------------------------------------------------------------------
-         void Shader::setVec2(const std::string& name, const glm::vec2& value) const
-         {
-             glUniform2fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]);
-         }
-         void Shader::setVec2(const std::string& name, float x, float y) const
-         {
-             glUniform2f(glGetUniformLocation(ID, name.c_str()), x, y);
-         }
-         // ------------------------------------------------------------------------
-         void Shader::setVec3(const std::string& name, const glm::vec3& value) const
-         {
-             glUniform3fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]);
-         }
-         void Shader::setVec3(const std::string& name, float x, float y, float z) const
-         {
-             glUniform3f(glGetUniformLocation(ID, name.c_str()), x, y, z);
-         }
-         // ------------------------------------------------------------------------
-         void Shader::setVec4(const std::string& name, const glm::vec4& value) const
-         {
-             glUniform4fv(glGetUniformLocation(ID, name.c_str()), 1, &value[0]);
-         }
-         void Shader::setVec4(const std::string& name, float x, float y, float z, float w)
-         {
-             glUniform4f(glGetUniformLocation(ID, name.c_str()), x, y, z, w);
-         }
-         // ------------------------------------------------------------------------
-         void Shader::setMat2(const std::string& name, const glm::mat2& mat) const
-         {
-             glUniformMatrix2fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
-         }
-         // ------------------------------------------------------------------------
-         void Shader::setMat3(const std::string& name, const glm::mat3& mat) const
-         {
-             glUniformMatrix3fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
-         }
-         // ------------------------------------------------------------------------
-         void Shader::setMat4(const std::string& name, const glm::mat4& mat) const
-         {
-             glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+void Shader::use()
+{
+    glUseProgram(ID);
+}
+// utility uniform functions
+// ------------------------------------------------------------------------
 
-         }
 
-         void Shader::checkCompileErrors(GLuint shader, std::string type)
-         {
+void Shader::checkCompileErrors(GLuint shader, std::string type)
+{
 
-                 GLint success;
-                         GLchar infoLog[1024];
-                         if (type != "PROGRAM")
-                         {
-                             glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-                             if (!success)
-                             { (infoLog);
-                                 std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
-                             }
-                         }
-                         else
-                         {
-                             glGetProgramiv(shader, GL_LINK_STATUS, &success);
-                             if (!success)
-                             {
-                                 glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-                                 std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
-                             }
-                             uniformProjection = glGetUniformLocation(ID, "projection"); //idy projection axata naw variably uniformProjection
-             
-                         }
-         }
-     /*                            void Shader::createFromString(const char* vertexCode, const char* fragmentCode)
+    GLint success;
+    GLchar infoLog[1024];
+    if (type != "PROGRAM")
+    {
+        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+        if (!success)
+        {
+            (infoLog);
+            std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+        }
+    }
+    else
+    {
+        glGetProgramiv(shader, GL_LINK_STATUS, &success);
+        if (!success)
+        {
+            glGetProgramInfoLog(shader, 1024, NULL, infoLog);
+            std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+        }
+        uniformProjection = glGetUniformLocation(ID, "projection"); //idy projection axata naw variably uniformProjection
 
-                                 {
-                                     compileShader(vertexCode, fragmentCode);
-                                 }*/
+    }
+}
+/*                            void Shader::createFromString(const char* vertexCode, const char* fragmentCode)
 
-         void Shader::AddShader(GLuint theProgram, const char* shaderCode, GLenum shaderType)
-         {
-             GLuint theShader = glCreateShader(shaderType);
-             const GLchar* theCode[1];
-             theCode[0] = shaderCode;
+                            {
+                                compileShader(vertexCode, fragmentCode);
+                            }*/
 
-             GLint codeLength[1];
-             codeLength[0] = strlen(shaderCode);
+void Shader::AddShader(GLuint theProgram, const char* shaderCode, GLenum shaderType)
+{
+    GLuint theShader = glCreateShader(shaderType);
+    const GLchar* theCode[1];
+    theCode[0] = shaderCode;
 
-             glShaderSource(theShader, 1, theCode, codeLength);
-             glCompileShader(theShader);///////////////////////////
+    GLint codeLength[1];
+    codeLength[0] = strlen(shaderCode);
 
-             GLint result = 0;
-             GLchar eLog[1024] = { 0 };
-             glGetShaderiv(theShader, GL_COMPILE_STATUS, &result);
+    glShaderSource(theShader, 1, theCode, codeLength);
+    glCompileShader(theShader);///////////////////////////
 
-             if (!result)
-             {
-                 glGetShaderInfoLog(theShader, sizeof(eLog), NULL, eLog);
-                 printf("Error compiling %d shader: '%s'\n", shaderType, eLog);
-                 return;
-             }
-             glAttachShader(theProgram, theShader);
-         }
+    GLint result = 0;
+    GLchar eLog[1024] = { 0 };
+    glGetShaderiv(theShader, GL_COMPILE_STATUS, &result);
 
- //()()()()()()()()()()()()()()()(
+    if (!result)
+    {
+        glGetShaderInfoLog(theShader, sizeof(eLog), NULL, eLog);
+        printf("Error compiling %d shader: '%s'\n", shaderType, eLog);
+        return;
+    }
+    glAttachShader(theProgram, theShader);
+}
+
+//()()()()()()()()()()()()()()()(
 Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath,
     const char* tessControlPath, const char* tessEvalPath) {
     // Implementation of the constructor...
@@ -516,9 +583,9 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geo
         }
 }
 
-            //void Shader::renderPass(glm::mat4 viewMatrix, glm::mat4 projectionMatrix) {
-            //    // Implementation of renderPass function...
-            //}
+//void Shader::renderPass(glm::mat4 viewMatrix, glm::mat4 projectionMatrix) {
+//    // Implementation of renderPass function...
+//}
 inline void Shader::createFromFiles(const char* vertexLocation, const char* fragmentLocation)
 {
     std::string vertexString = ReadFile(vertexLocation);
@@ -528,7 +595,7 @@ inline void Shader::createFromFiles(const char* vertexLocation, const char* frag
 
     compileShader(vertexCode, fragmentCode);
 }
-    //()()()()()( compile shader 
+//()()()()()( compile shader 
 void Shader::compileShader(const char* vertexCode, const char* fragmentCode)
 
 {
@@ -573,7 +640,7 @@ void Shader::compileShader(const char* vertexCode, const char* fragmentCode)
     }
     //uniformModel = glGetUniformLocation(shader, "xMove");
     //vertexInStuff = glGetAttribLocation(shaderID, "heightmapTexture"); /*Ama bo terrain la bri 1518 chwnka natwanm accessy shaderId bkam laweya boya lerawa aykam*/ 
-  
+
 }
 
 
@@ -607,7 +674,7 @@ void createShaders() {
 GLuint Shader::GetViewLocation()
 {
     return uniformView;
- 
+
 }
 
 
@@ -833,7 +900,7 @@ public:
     //Mesh* veticeModelyYak;
     //Mesh* veticeModelyDw;
 
-    
+
     Shader* skyShader; //we use this for createFromFiles 
 
 
@@ -966,7 +1033,7 @@ skyBox skybox;
 void Shader::renderPass(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 {
     //glfwPollEvents();
-     SDL_Event event;
+    SDL_Event event;
     //glViewport(110, 10, 1366, 768);
 
     //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -979,8 +1046,8 @@ void Shader::renderPass(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
     //glUseProgram(shader);
 
     glUseProgram(ID);
-        //uniformModel = shaderList[0].GetModelLocation();
-        //uniformModel2 = shaderList[0].GetModelLocation();// <|--------- this maybe works who knows?
+    //uniformModel = shaderList[0].GetModelLocation();
+    //uniformModel2 = shaderList[0].GetModelLocation();// <|--------- this maybe works who knows?
     uniformProjection = shaderList[0].GetProjectionLocation();
     // you can use it without GetProjectionLocation like this >>>>>>>> uniformProjection = shaderList[0].uniformProjection;
 
@@ -994,27 +1061,27 @@ void Shader::renderPass(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
             uniformShininess = shaderList[0].GetShininessLocation();*/
 
 
-    //glm::vec3 LowerLight = camera.getCameraPosition();
-   // LowerLight.y -= 0.3f;
-    //spotLights[0].SetFlash(LowerLight, camera.getCameraDirection()); //moving Torch 'Spotlight.cpp, .h
+            //glm::vec3 LowerLight = camera.getCameraPosition();
+           // LowerLight.y -= 0.3f;
+            //spotLights[0].SetFlash(LowerLight, camera.getCameraDirection()); //moving Torch 'Spotlight.cpp, .h
 
-    //shaderList[0].SetDirectionalLight(&mainLight);
-    //shaderList[0].SetPointLights(pointLights, pointLightCount);
-   // shaderList[0].SetSpotLights(spotLights, spotLightCount);
+            //shaderList[0].SetDirectionalLight(&mainLight);
+            //shaderList[0].SetPointLights(pointLights, pointLightCount);
+           // shaderList[0].SetSpotLights(spotLights, spotLightCount);
 
 
 
-    //glm 
+            //glm 
     glm::mat4 model(1.0f);
 
     glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-   // glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(camera.calculateViewMatrix()));
-   // glUniform3f(uniformEyePosition, camera.getCameraPosition().x, camera.getCameraPosition().y,
-     //   camera.getCameraPosition().z);
+    // glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(camera.calculateViewMatrix()));
+    // glUniform3f(uniformEyePosition, camera.getCameraPosition().x, camera.getCameraPosition().y,
+      //   camera.getCameraPosition().z);
 
 
-    //CreateObjects();
-    //createShaders();
+     //CreateObjects();
+     //createShaders();
 
 }
 //</SHADER
@@ -1059,7 +1126,7 @@ public:
 
     // constructor with vectors
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up =
-        glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : 
+        glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) :
         Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
     {
         Position = position;
@@ -1074,8 +1141,8 @@ public:
     {
         Position = glm::vec3(posX, posY, posZ);
         WorldUp = glm::vec3(upX, upY, upZ);
-        Yaw = yaw/100.0f;
-        Pitch = pitch/100.0f;
+        Yaw = yaw / 100.0f;
+        Pitch = pitch / 100.0f;
         updateCameraVectors();
     }
 
@@ -1090,7 +1157,7 @@ public:
     {
         float velocity = MovementSpeed * deltaTime;
         if (direction == FORWARD)
-            Position += Front * velocity; 
+            Position += Front * velocity;
         if (direction == BACKWARD)
             Position -= Front * velocity;
         if (direction == LEFT)
@@ -1114,7 +1181,7 @@ public:
             if (Pitch > 89.0f)
                 Pitch = 89.0f;
             if (Pitch < -89.0f)
-                Pitch = -89.0f;
+                Pitch = 89.0f;
         }
 
         // update Front, Right and Up Vectors using the updated Euler angles
@@ -1124,7 +1191,7 @@ public:
         FOV -= ZOOM; // Decrease the field of view
         //if (FOV < minFOV) FOV = minFOV;
     }
-    
+
     void zoomOut() {
         FOV += ZOOM; // Increase the field of view
         //if (FOV > maxFOV) FOV = maxFOV;
@@ -1136,7 +1203,7 @@ public:
         if (Zoom < 1.0f)
             Zoom = 1.0f;
         if (Zoom > 45.0f)
-            Zoom = 45.0f; 
+            Zoom = 45.0f;
     }
     void zoom(int amount) {
         // Move the camera along the front vector
@@ -1184,7 +1251,7 @@ private:
 
 
 ////////////////INPUT////////////////
-  
+
 ////////////////</INPUT>/////////////////
 
 
@@ -1216,7 +1283,7 @@ int main(int argc, char* argv[])
         std::cerr << "Failed to initialize SDL: " << SDL_GetError() << std::endl;
         return -1;
     }
-    std::cout << "Camera Pos: " << camera.Position.x << ", " << camera.Position.y << ", " << camera.Position.z << std::endl; 
+    std::cout << "Camera Pos: " << camera.Position.x << ", " << camera.Position.y << ", " << camera.Position.z << std::endl;
     std::cout << "Camera Front: " << camera.Front.x << ", " << camera.Front.y << ", " << camera.Front.z << std::endl;
 
 
@@ -1241,12 +1308,12 @@ int main(int argc, char* argv[])
         SDL_Quit();
         return -1;
     }
-   
-        
+
+
 
     // Initialize GLAD
-    
-        if (!gladLoaderLoadGL()){
+
+    if (!gladLoaderLoadGL()) {
         std::cerr << "Failed to initialize GLAD" << std::endl;
         SDL_GL_DeleteContext(context);
         SDL_DestroyWindow(window);
@@ -1254,323 +1321,322 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-        GLint maxTessLevel;
-        glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &maxTessLevel);
-        std::cout << "Max available tess level: " << maxTessLevel << std::endl;
+    GLint maxTessLevel;
+    glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &maxTessLevel);
+    std::cout << "Max available tess level: " << maxTessLevel << std::endl;
 
-        // configure global opengl state
-        // -----------------------------
-        glEnable(GL_DEPTH_TEST);
-        //ShaderAi part
-        shaderAi::daspeka()->drwstkaProgram();
-        shaderAi::daspeka()->drwstkaShader();
-        shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheight.vert",shaderAi::JoryShader::VERTEX_SHADER);
-        shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheight.frag", shaderAi::JoryShader::FRAGMENT_SHADER);
-        shaderAi::daspeka()->bilkenaShader();
-        shaderAi::daspeka()->bibastawaShader();
+    // configure global opengl state
+    // -----------------------------
+    glEnable(GL_DEPTH_TEST);
+    //ShaderAi part
+    shaderAi::daspeka()->drwstkaProgram();
+    shaderAi::daspeka()->drwstkaShader();
+    shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheight.vert", shaderAi::JoryShader::VERTEX_SHADER);
+    shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheight.frag", shaderAi::JoryShader::FRAGMENT_SHADER);
+    shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheightT.tesc", shaderAi::JoryShader::TESS_CONTROL_SHADER);
+    shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheightT.tese", shaderAi::JoryShader::TESS_EVALUATION_SHADER);
+    shaderAi::daspeka()->bilkenaShader();
+    shaderAi::daspeka()->bibastawaShader();
+    //shaderAi::daspeka()->koikarawaShader("",);
+    //shaderAi::daspeka()->();
 
+    //ShaderAi part </
 
-        //shaderAi::daspeka()->koikarawaShader("",);
-        //shaderAi::daspeka()->();
+    // build and compile our shader program
+    // ------------------------------------
+    //shaderAi tessHeightMapShader;
 
-        //ShaderAi part </
+    // load and create a texture
+    // -------------------------
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
+    // set the texture wrapping parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // set texture filtering parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // load image, create texture and generate mipmaps
+    int width, height, nrChannels;
+    // The FileSystem::getPath(...) is part of the GitHub repository so we can find files on any IDE/platform; replace it with your own image path.
+    unsigned char* data = stbi_load("Textures/FRC.jpg", &width, &height, &nrChannels, 0);
+    if (data)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
 
-        // build and compile our shader program
-        // ------------------------------------
-        Shader tessHeightMapShader("Shaders/8.3.gpuheight.vert", "Shaders/8.3.gpuheight.frag", nullptr,            // if wishing to render as is
-            "Shaders/8.3.gpuheightT.tesc", "Shaders/8.3.gpuheightT.tese");
+        // tessHeightMapShader.setInt("heightMap", 0);
+        std::cout << "Loaded heightmap of size " << height << " x " << width << std::endl;
+    }
+    else
+    {
+        std::cout << "Failed to load texture" << std::endl;
+    }
+    stbi_image_free(data);
 
-        // load and create a texture
-        // -------------------------
-        unsigned int texture;
-        glGenTextures(1, &texture);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
-        // set the texture wrapping parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        // set texture filtering parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // load image, create texture and generate mipmaps
-        int width, height, nrChannels;
-        // The FileSystem::getPath(...) is part of the GitHub repository so we can find files on any IDE/platform; replace it with your own image path.
-        unsigned char* data = stbi_load("Textures/FRC.jpg", &width, &height, &nrChannels, 0);
-        if (data)
+    // set up vertex data (and buffer(s)) and configure vertex attributes
+    // ------------------------------------------------------------------
+    std::vector<float> vertices;
+
+    unsigned rez = 20;
+    for (unsigned i = 0; i <= rez - 1; i++)
+    {
+        for (unsigned j = 0; j <= rez - 1; j++)
         {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-            glGenerateMipmap(GL_TEXTURE_2D);
+            vertices.push_back(-width / 2.0f + width * i / (float)rez); // v.x
+            vertices.push_back(0.0f); // v.y
+            vertices.push_back(-height / 2.0f + height * j / (float)rez); // v.z
+            vertices.push_back(i / (float)rez); // u
+            vertices.push_back(j / (float)rez); // v
 
-            tessHeightMapShader.setInt("heightMap", 0);
-            std::cout << "Loaded heightmap of size " << height << " x " << width << std::endl;
+            vertices.push_back(-width / 2.0f + width * (i + 1) / (float)rez); // v.x
+            vertices.push_back(0.0f); // v.y
+            vertices.push_back(-height / 2.0f + height * j / (float)rez); // v.z
+            vertices.push_back((i + 1) / (float)rez); // u
+            vertices.push_back(j / (float)rez); // v
+
+            vertices.push_back(-width / 2.0f + width * i / (float)rez); // v.x
+            vertices.push_back(0.0f); // v.y
+            vertices.push_back(-height / 2.0f + height * (j + 1) / (float)rez); // v.z
+            vertices.push_back(i / (float)rez); // u
+            vertices.push_back((j + 1) / (float)rez); // v
+
+            vertices.push_back(-width / 2.0f + width * (i + 1) / (float)rez); // v.x
+            vertices.push_back(0.0f); // v.y
+            vertices.push_back(-height / 2.0f + height * (j + 1) / (float)rez); // v.z
+            vertices.push_back((i + 1) / (float)rez); // u
+            vertices.push_back((j + 1) / (float)rez); // v
         }
-        else
-        {
-            std::cout << "Failed to load texture" << std::endl;
-        }
-        stbi_image_free(data);
+    }
+    std::cout << "Loaded " << rez * rez << " patches of 4 control points each" << std::endl;
+    std::cout << "Processing " << rez * rez * 4 << " vertices in vertex shader" << std::endl;
 
-        // set up vertex data (and buffer(s)) and configure vertex attributes
-        // ------------------------------------------------------------------
-        std::vector<float> vertices;
+    // first, configure the cube's VAO (and terrainVBO)
+    unsigned int terrainVAO, terrainVBO;
+    glGenVertexArrays(1, &terrainVAO);
+    glBindVertexArray(terrainVAO);
 
-        unsigned rez = 20;
-        for (unsigned i = 0; i <= rez - 1; i++)
-        {
-            for (unsigned j = 0; j <= rez - 1; j++)
-            {
-                vertices.push_back(-width / 2.0f + width * i / (float)rez); // v.x
-                vertices.push_back(0.0f); // v.y
-                vertices.push_back(-height / 2.0f + height * j / (float)rez); // v.z
-                vertices.push_back(i / (float)rez); // u
-                vertices.push_back(j / (float)rez); // v
+    glGenBuffers(1, &terrainVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, terrainVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
 
-                vertices.push_back(-width / 2.0f + width * (i + 1) / (float)rez); // v.x
-                vertices.push_back(0.0f); // v.y
-                vertices.push_back(-height / 2.0f + height * j / (float)rez); // v.z
-                vertices.push_back((i + 1) / (float)rez); // u
-                vertices.push_back(j / (float)rez); // v
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // texCoord attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));
+    glEnableVertexAttribArray(1);
 
-                vertices.push_back(-width / 2.0f + width * i / (float)rez); // v.x
-                vertices.push_back(0.0f); // v.y
-                vertices.push_back(-height / 2.0f + height * (j + 1) / (float)rez); // v.z
-                vertices.push_back(i / (float)rez); // u
-                vertices.push_back((j + 1) / (float)rez); // v
-
-                vertices.push_back(-width / 2.0f + width * (i + 1) / (float)rez); // v.x
-                vertices.push_back(0.0f); // v.y
-                vertices.push_back(-height / 2.0f + height * (j + 1) / (float)rez); // v.z
-                vertices.push_back((i + 1) / (float)rez); // u
-                vertices.push_back((j + 1) / (float)rez); // v
-            }
-        }
-        std::cout << "Loaded " << rez * rez << " patches of 4 control points each" << std::endl;
-        std::cout << "Processing " << rez * rez * 4 << " vertices in vertex shader" << std::endl;
-
-        // first, configure the cube's VAO (and terrainVBO)
-        unsigned int terrainVAO, terrainVBO;
-        glGenVertexArrays(1, &terrainVAO);
-        glBindVertexArray(terrainVAO);
-
-        glGenBuffers(1, &terrainVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, terrainVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
-
-        // position attribute
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-        // texCoord attribute
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));
-        glEnableVertexAttribArray(1);
-
-        glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);
-
-        
-        //SHADER2 -----------
-       
-        //not implemented yet
-
-        //SHADER2------------
-
-        SDL_Event event;
-        float deltaTime = 0.0f;
-        float lastFrame = 0.0f;
-
-                const int FPS = 60;
-                const int frameDelay = 1000 / FPS;
-
-        Uint32 frameStart;
-        int frameTime;
+    glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);
 
 
-        while (running) {
-           // glViewport(0,0,800,800);
-         
-                                            //* (5.0f * (deltaTime * 0.001));
-            glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            float currentFrame = SDL_GetTicks();
+    //SHADER2 -----------
 
-            //// Activate shader before drawing
-            //ourShader.use();
+    //not implemented yet
 
-            //// Set uniforms
-            //ourShader.setFloat("someUniform", 0.5f);
+    //SHADER2------------
+
+    SDL_Event event;
+    float deltaTime = 0.0f;
+    float lastFrame = 0.0f;
+
+    const int FPS = 60;
+    const int frameDelay = 1000 / FPS;
+
+    Uint32 frameStart;
+    int frameTime;
 
 
-                //// Set dynamic uniforms (like transformations)
-                //glm::mat4 model = glm::mat4(1.0f);
-                //glm::mat4 view = camera.GetViewMatrix();
-                //glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-                //ourShader.setMat4("model", model);
-                //ourShader.setMat4("view", view);
-                //ourShader.setMat4("projection", projection);
+    while (running) {
+        // glViewport(0,0,800,800);
 
-            scroll_callback(&event);
+                                         //* (5.0f * (deltaTime * 0.001));
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        float currentFrame = SDL_GetTicks();
 
-            while (SDL_PollEvent(&event)) {
-                switch (event.type) {
-                case SDL_QUIT:
+        //// Activate shader before drawing
+        //ourShader.use();
+
+        //// Set uniforms
+        //ourShader.setFloat("someUniform", 0.5f);
+
+
+            //// Set dynamic uniforms (like transformations)
+            //glm::mat4 model = glm::mat4(1.0f);
+            //glm::mat4 view = camera.GetViewMatrix();
+            //glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+            //ourShader.setMat4("model", model);
+            //ourShader.setMat4("view", view);
+            //ourShader.setMat4("projection", projection);
+
+        scroll_callback(&event);
+
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+            case SDL_QUIT:
+                running = false;
+                break;
+            case SDL_KEYDOWN:
+                switch (event.key.keysym.sym) {
+                case SDLK_ESCAPE:
                     running = false;
                     break;
-                case SDL_KEYDOWN:
-                    switch (event.key.keysym.sym) {
-                    case SDLK_ESCAPE:
-                        running = false;
-                        break;
-                    case SDLK_w:
-                        camera.ProcessKeyboard(FORWARD, deltaTime); 
-                        break;
-                    case SDLK_s:
-                        camera.ProcessKeyboard(BACKWARD, deltaTime);
-                        break;
-                    case SDLK_a:
-                        camera.ProcessKeyboard(LEFT, deltaTime);
-                        break;
-                    case SDLK_d:
-                        camera.ProcessKeyboard(RIGHT, deltaTime);
-                        break;
-                        // Add more key bindings as needed
-                    case SDLK_r:
-                        //wireframe
-                        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-                        break;
-                    case SDLK_f:
-                        //fill frame
-                        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); 
-                        break;
-                    }
-
-                case SDL_MOUSEMOTION:
-                    mouse_callback(&event);
-                    
-                    // Add other event types as needed
-                    if (isDragging) {
-                        // Calculate the distance dragged
-                        int x = event.motion.x;
-                        int y = event.motion.y;
-                        int dx = x - startX;
-                        int dy = y - startY;
-                        std::cout << "Dragging by: " << dx << ", " << dy << std::endl;
-
-                        // Optionally: Update the start position for smoother dragging
-                        camera.Pan(static_cast<float>(-dx), static_cast<float>(dy));
-
-                        startX = x;
-                        startY = y;
-
-                    }
+                case SDLK_w:
+                    camera.ProcessKeyboard(FORWARD, deltaTime);
                     break;
-              
-                case SDL_MOUSEWHEEL:
-                    scroll_callback(&event);
+                case SDLK_s:
+                    camera.ProcessKeyboard(BACKWARD, deltaTime);
+                    break;
+                case SDLK_a:
+                    camera.ProcessKeyboard(LEFT, deltaTime);
+                    break;
+                case SDLK_d:
+                    camera.ProcessKeyboard(RIGHT, deltaTime);
+                    break;
+                    // Add more key bindings as needed
+                case SDLK_r:
+                    //wireframe
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+                    break;
+                case SDLK_f:
+                    //fill frame
+                    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+                    break;
+                }
 
-                    if (event.wheel.y != 0) { // scroll up
-                        // Zoom in
-                        int zoomAmount = event.wheel.y > 0 ? -1 : 1; // Determine direction
-                        camera.zoom(zoomAmount);
-                    }
-                    else if (event.wheel.y < 0) { // scroll down
-                        // Zoom out
-                        camera.zoomOut();
-                    }
-                    break;
-                case SDL_MOUSEBUTTONDOWN:
-                    if (event.button.button == SDL_BUTTON_LEFT) {  // If the left button was pressed
-                        isDragging = true;
-                        startX = event.button.x;
-                        startY = event.button.y;
-                    }
-                    break;
-                case SDL_MOUSEBUTTONUP:
-                    if (event.button.button == SDL_BUTTON_LEFT) {  // If the left button was released
-                        isDragging = false;
-                    }
+            case SDL_MOUSEMOTION:
+                mouse_callback(&event);
+
+                // Add other event types as needed
+                if (isDragging) {
+                    // Calculate the distance dragged
+                    int x = event.motion.x;
+                    int y = event.motion.y;
+                    int dx = x - startX;
+                    int dy = y - startY;
+                    std::cout << "Dragging by: " << dx << ", " << dy << std::endl;
+
+                    // Optionally: Update the start position for smoother dragging
+                    camera.Pan(static_cast<float>(-dx), static_cast<float>(dy));
+
+                    startX = x;
+                    startY = y;
 
                 }
+                break;
+
+            case SDL_MOUSEWHEEL:
+                scroll_callback(&event);
+
+                if (event.wheel.y != 0) { // scroll up
+                    // Zoom in
+                    int zoomAmount = event.wheel.y > 0 ? -1 : 1; // Determine direction
+                    camera.zoom(zoomAmount);
+                }
+                else if (event.wheel.y < 0) { // scroll down
+                    // Zoom out
+                    camera.zoomOut();
+                }
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                if (event.button.button == SDL_BUTTON_LEFT) {  // If the left button was pressed
+                    isDragging = true;
+                    startX = event.button.x;
+                    startY = event.button.y;
+                }
+                break;
+            case SDL_MOUSEBUTTONUP:
+                if (event.button.button == SDL_BUTTON_LEFT) {  // If the left button was released
+                    isDragging = false;
+                }
+
             }
-
-
-
-            deltaTime = (currentFrame - lastFrame) / 1000.0f; // Convert milliseconds to seconds
-            lastFrame = currentFrame;
-
-            frameStart = SDL_GetTicks();
-            frameTime = SDL_GetTicks() - frameStart;
-            if (frameDelay > frameTime) {
-                SDL_Delay(frameDelay - frameTime);
-            }
-            
-           
-
-            // input
-            // -----
-            //processInput(window, running);
-
-            // render
-            // ------
-          
-
-            // be sure to activate shader when setting uniforms/drawing objects
-            tessHeightMapShader.use();
-
-            // view/projection transformations
-            glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
-            glm::mat4 view = camera.GetViewMatrix();
-            tessHeightMapShader.setMat4("projection", projection);
-            tessHeightMapShader.setMat4("view", view);
-            // world transformation
-            glm::mat4 position;
-            glm::mat4 model = glm::mat4(1.0f);
-            tessHeightMapShader.setMat4("model", model);
-            //glm::mat4 model = glm::mat4(1.0f);
-           /* Transform model2;
-            model2.SetScale(1.0f, 1.0f, 1.0f);
-            model2.SetPosition(1.0f, 1.0f, 1.0f);
-            model2.GetScale();*/
-
-
-            // render the terrain
-            glBindVertexArray(terrainVAO);
-            glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS * rez * rez);
-
-            // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-            // -------------------------------------------------------------------------------
-            //SDL_GL_SwapWindow(window);
-
-     
-            //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-            SDL_GL_SwapWindow(window);
         }
-       // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-        
-        // optional: de-allocate all resources once they've outlived their purpose:
-        // ------------------------------------------------------------------------
-        glDeleteVertexArrays(1, &terrainVAO);
-        glDeleteBuffers(1, &terrainVBO);
-
-        // glfw: terminate, clearing all previously allocated GLFW resources.
-        // ------------------------------------------------------------------
-        //instead of glfwTerminate();
-        // Quit SDL
-        SDL_GL_DeleteContext(context);
-        SDL_DestroyWindow(window);
-        SDL_Quit();
-
-        shaderAi::daspeka()->jyaikarawaShader();
-        shaderAi::daspeka()->lanawyBaraShader();
-        shaderAi::daspeka()->lanawyBaraProgram();
 
 
 
-        return 0;
+        deltaTime = (currentFrame - lastFrame) / 1000.0f; // Convert milliseconds to seconds
+        lastFrame = currentFrame;
+
+        frameStart = SDL_GetTicks();
+        frameTime = SDL_GetTicks() - frameStart;
+        if (frameDelay > frameTime) {
+            SDL_Delay(frameDelay - frameTime);
+        }
+
+
+
+        // input
+        // -----
+        //processInput(window, running);
+
+        // render
+        // ------
+
+
+        // be sure to activate shader when setting uniforms/drawing objects
+        //tessHeightMapShader.use();
+
+        // view/projection transformations
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
+        glm::mat4 view = camera.GetViewMatrix();
+        shaderAi::daspeka()->setMat4("projection", projection);
+        shaderAi::daspeka()->setMat4("view", view);
+        // world transformation
+        glm::mat4 position;
+        glm::mat4 model = glm::mat4(1.0f);
+        shaderAi::daspeka()->setMat4("model", model);
+        //glm::mat4 model = glm::mat4(1.0f);
+       /* Transform model2;
+        model2.SetScale(1.0f, 1.0f, 1.0f);
+        model2.SetPosition(1.0f, 1.0f, 1.0f);
+        model2.GetScale();*/
+
+
+        // render the terrain
+        glBindVertexArray(terrainVAO);
+        glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS * rez * rez);
+
+        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+        // -------------------------------------------------------------------------------
+        //SDL_GL_SwapWindow(window);
+
+
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        SDL_GL_SwapWindow(window);
+    }
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+     // optional: de-allocate all resources once they've outlived their purpose:
+     // ------------------------------------------------------------------------
+    glDeleteVertexArrays(1, &terrainVAO);
+    glDeleteBuffers(1, &terrainVBO);
+
+    // glfw: terminate, clearing all previously allocated GLFW resources.
+    // ------------------------------------------------------------------
+    //instead of glfwTerminate();
+    // Quit SDL
+    SDL_GL_DeleteContext(context);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+
+    shaderAi::daspeka()->jyaikarawaShader();
+    shaderAi::daspeka()->lanawyBaraShader();
+    shaderAi::daspeka()->lanawyBaraProgram();
+
+
+
+    return 0;
 }
 
 ////
 
-   
+
 
 
 void checkForWindowResize() {
@@ -1628,7 +1694,7 @@ void scroll_callback(SDL_Event* event) {
     float yoffset = static_cast<float>(event->wheel.y);
     camera.ProcessMouseScroll(yoffset);
     //SDL_Event event;
-    
+
 }
 
 
