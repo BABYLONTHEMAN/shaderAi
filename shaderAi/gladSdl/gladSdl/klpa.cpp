@@ -1,4 +1,5 @@
 #include <iostream>
+#include <thread>
 #include <SDL.h>
 #include "glad/gl.h"
 #include <glm.hpp>
@@ -152,6 +153,8 @@ bool shaderAi::koikarawaShader(const std::string& nawiFile, JoryShader joryShade
     switch (joryShader) {
     case JoryShader::VERTEX_SHADER:
         idShader = m_IdVertexyShader;
+        //"\033[1;31mDway Away\033[0m"
+        std::cout << "\033[1;36m";
         std::cout << "\n  idShader = m_IdVertexyShader; \n";
         break;
     case JoryShader::FRAGMENT_SHADER:
@@ -170,6 +173,7 @@ bool shaderAi::koikarawaShader(const std::string& nawiFile, JoryShader joryShade
         std::cout << "\n Invalid shader type \n";
         return false; // Return false for error case
         //return 0; // Return 0 or handle error case
+        std::cout << "\033[0m";
     }
 
     file.open(nawiFile);
@@ -705,11 +709,11 @@ std::string Shader::ReadFile(const char* fileloc)
 struct Vertex {
     glm::vec3 Position;
     glm::vec3 Normal;
-    glm::vec2 TexCoords;
+    glm::vec2 TexCoord;
     glm::vec3 Tangent;
 
     Vertex(const glm::vec3& pos, const glm::vec3& normal, const glm::vec2& tex, const glm::vec3& tangent)
-        : Position(pos), Normal(normal), TexCoords(tex), Tangent(tangent) {}
+        : Position(pos), Normal(normal), TexCoord(tex), Tangent(tangent) {}
 };
 
 
@@ -1253,6 +1257,48 @@ private:
 ////////////////INPUT////////////////
 
 ////////////////</INPUT>/////////////////
+   //cubemap 
+
+
+// 
+//definey textureId
+GLuint textureID;
+
+//GLuint textureID;
+GLuint loadCubemap(std::vector<std::string> faces, const std::string& defaultFace) {
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+    // Bind the texture object
+   
+    int width, height, nrChannels;
+    for (unsigned int i = 0; i < faces.size(); i++) {
+        unsigned char* data = nullptr;
+        data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data) {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            stbi_image_free(data);
+        }
+        else {
+            std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+            stbi_image_free(data);
+        }
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return textureID;
+
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        // Print or log the error message
+        std::cerr << "OpenGL error: " << error << std::endl;
+    }
+}
 
 
 
@@ -1275,7 +1321,10 @@ float lastFrame = 0.0f;
 ////////////////////////////////////
 ////////////////////////////////////
 
-
+bool fileExists(const std::string& filename) {
+    std::ifstream file(filename);
+    return file.good();
+}
 int main(int argc, char* argv[])
 {
     // Initialize SDL
@@ -1308,8 +1357,7 @@ int main(int argc, char* argv[])
         SDL_Quit();
         return -1;
     }
-
-
+    
 
     // Initialize GLAD
 
@@ -1321,6 +1369,95 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+
+    std::vector<std::string> faces{
+    "Textures/skybox/xpos.png",
+    "Textures/skybox/xneg.pn",
+    "Textures/skybox/ypos.png",
+    "Textures/skybox/yneg.png",
+    "Textures/skybox/zpos.png",
+    "Textures/skybox/x.png"
+    };
+
+    //genius AI way to tell if the .png exist or not
+     // Check if all face files exist
+
+    /*
+    la sarw int main() :
+    
+    bool fileExists(const std::string & filename) {
+        std::ifstream file(filename);
+        return file.good();
+    }
+    la naw int main():
+
+    for (const std::string& face : faces) {
+        if (!fileExists(face)) {
+            std::cerr << "Error: File not found: " << face << std::endl;
+            return 1; // Return error code indicating failure
+        }
+    }
+    */
+    
+    const std::string defaultFace = "Textures/skybox/muspelheim.png";
+
+    for ( std::string& face : faces) {
+        if (!fileExists(face)) {
+            std::cerr << "\033[1;31mAm Fila Nadozrawatawa: " << face << "\033[0m" << std::endl; // Print in red
+            std::cerr << "\033[1;32mBoya aigorin bam " << "\033[1;33m" <<  "'Textures/skybox/muspelheim.png'" << " \033[0m" << "\033[1;32mdefaulta \033[0m\n";
+            std::cerr << "\033[1;36mPesh Away \033[0m" << "\033[1;31m(\033[0m" << "\033[33m'face = defaultFace;\033[0m'"<<"\033[1;31m)\033[0m"<<"\033[1;34m'face'\033[0m"
+                << "\033[1;31m britya la '\033[0m"<<  face << "'\033[0m" << std::endl; // Print in green
+            face = defaultFace;
+            std::cerr << "\033[1;31mDway Away\033[0m" <<"\033[1;31m (\033[0m" <<"\033[33m'face = defaultFace;\033[0m'"<< "\033[1;31m)\033[0m" <<  "\033[1;34m'face'\033[0m"<<  "\033[1;35m britya la '\033[0m"
+                <<"\033[1;33m"<< face << " \033[0m" << std::endl; // Print in green
+        }
+        else
+        {
+            std::cerr << "\033[1;32mBro xoty shamal: \033[0m" << "\033[36m ...... \033[0m" << "\033[35m"<< face<< "\033[0m"  << "\033[33m ...... \033[0m" << std::endl;
+
+        }
+        //loading bar ..... 
+        //constexpr int barWidth = 40;
+        //while (true) {
+        //    static int pos = 0;
+        //    std::cerr << "\r\033[1;32m Bro xoty shamal: \033[0m" << "\033[36m [";
+        //    for (int i = 0; i < barWidth; ++i) {
+        //        if (i < pos) std::cerr << "=";
+        //        else if (i == pos) std::cerr << ">";
+        //        else std::cerr << " ";
+        //    }
+        //    std::cerr << "] " << "\033[42m" << face << "\033[0m" << std::flush;
+        //    pos = (pos + 1) % (barWidth + 1);
+        //    std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Adjust the delay time as needed
+        //}
+        //loading bar ..... </>
+
+       /* for (size_t i = 0; i < 10; i++)
+       {
+            std::cout << "\..>   " << std::flush;
+            std::cout << "\...>   " << std::flush;
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            std::cout << "\....>   " << std::flush;
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            std::cout << "\r...< " << std::flush;
+            std::cout << "\r..< " << std::flush;
+            std::cout << "\r.< " << std::flush;
+            std::cout << "\< " << std::flush;
+            std::cout << "\> " << std::flush;
+            std::cout << "\.> " << std::flush;
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        }*/
+
+    }
+
+    GLuint cubemapTexture = loadCubemap(faces, defaultFace); 
+    //</cube map>
+
+    std::cerr << "\033[1;32m......\033[0m" << "\033[36m ...... \033[0m" << "\033[30m" << "\033[0m" << "\033[33m ...... \033[0m" <<
+        "\033[1;32m...... \033[0m" << "\033[36m ...... \033[0m" << "\033[30m" << "\033[0m" << "\033[33m ...... \033[0m\n";
+
+    //system("color A");
+
     GLint maxTessLevel;
     glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &maxTessLevel);
     std::cout << "Max available tess level: " << maxTessLevel << std::endl;
@@ -1331,10 +1468,12 @@ int main(int argc, char* argv[])
     //ShaderAi part
     shaderAi::daspeka()->drwstkaProgram();
     shaderAi::daspeka()->drwstkaShader();
-    shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheight.vert", shaderAi::JoryShader::VERTEX_SHADER);
-    shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheight.frag", shaderAi::JoryShader::FRAGMENT_SHADER);
+   shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheight.vert", shaderAi::JoryShader::VERTEX_SHADER);
+   shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheight.frag", shaderAi::JoryShader::FRAGMENT_SHADER);
     shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheightT.tesc", shaderAi::JoryShader::TESS_CONTROL_SHADER);
     shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheightT.tese", shaderAi::JoryShader::TESS_EVALUATION_SHADER);
+    shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.vert", shaderAi::JoryShader::VERTEX_SHADER);
+    shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.frag", shaderAi::JoryShader::FRAGMENT_SHADER);
     shaderAi::daspeka()->bilkenaShader();
     shaderAi::daspeka()->bibastawaShader();
     //shaderAi::daspeka()->koikarawaShader("",);
@@ -1412,11 +1551,18 @@ int main(int argc, char* argv[])
     }
     std::cout << "Loaded " << rez * rez << " patches of 4 control points each" << std::endl;
     std::cout << "Processing " << rez * rez * 4 << " vertices in vertex shader" << std::endl;
-
+    //GLuint textureID;
     // first, configure the cube's VAO (and terrainVBO)
-    unsigned int terrainVAO, terrainVBO;
+    unsigned int terrainVAO, terrainVBO, skyboxVAO , skyboxVBO;
     glGenVertexArrays(1, &terrainVAO);
     glBindVertexArray(terrainVAO);
+ 
+    //bo skybox VAO stuff
+    glGenVertexArrays(1, &skyboxVAO);
+    glBindVertexArray(skyboxVAO);
+
+   //glGenBuffers(1, &skyboxVBO);
+    //glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
 
     glGenBuffers(1, &terrainVBO);
     glBindBuffer(GL_ARRAY_BUFFER, terrainVBO);
@@ -1431,7 +1577,24 @@ int main(int argc, char* argv[])
 
     glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);
 
+    glGenTextures(1, &textureID);
 
+
+ 
+
+    // Set texture parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Load texture data and upload to GPU
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+ 
+    //cube map
+ 
     //SHADER2 -----------
 
     //not implemented yet
@@ -1457,20 +1620,6 @@ int main(int argc, char* argv[])
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         float currentFrame = SDL_GetTicks();
 
-        //// Activate shader before drawing
-        //ourShader.use();
-
-        //// Set uniforms
-        //ourShader.setFloat("someUniform", 0.5f);
-
-
-            //// Set dynamic uniforms (like transformations)
-            //glm::mat4 model = glm::mat4(1.0f);
-            //glm::mat4 view = camera.GetViewMatrix();
-            //glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-            //ourShader.setMat4("model", model);
-            //ourShader.setMat4("view", view);
-            //ourShader.setMat4("projection", projection);
 
         scroll_callback(&event);
 
@@ -1568,18 +1717,6 @@ int main(int argc, char* argv[])
         }
 
 
-
-        // input
-        // -----
-        //processInput(window, running);
-
-        // render
-        // ------
-
-
-        // be sure to activate shader when setting uniforms/drawing objects
-        //tessHeightMapShader.use();
-
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
         glm::mat4 view = camera.GetViewMatrix();
@@ -1595,32 +1732,31 @@ int main(int argc, char* argv[])
         model2.SetPosition(1.0f, 1.0f, 1.0f);
         model2.GetScale();*/
 
-
+        //render skybox 
+        // Render skybox cube
+       // glDepthMask(GL_FALSE);
+       // glDepthMask(GL_TRUE); 
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glDepthMask(GL_FALSE);
+        glBindVertexArray(skyboxVAO);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+       // shaderAi::daspeka()->setMat4("projection", projection);
+        //shaderAi::daspeka()->setMat4("view", view);
+        // </render skybox
         // render the terrain
         glBindVertexArray(terrainVAO);
         glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS * rez * rez);
-
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
-        //SDL_GL_SwapWindow(window);
-
-
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        glBindVertexArray(0);
 
         SDL_GL_SwapWindow(window);
     }
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-     // optional: de-allocate all resources once they've outlived their purpose:
-     // ------------------------------------------------------------------------
+ 
     glDeleteVertexArrays(1, &terrainVAO);
     glDeleteBuffers(1, &terrainVBO);
 
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    // ------------------------------------------------------------------
-    //instead of glfwTerminate();
-    // Quit SDL
+    
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();
@@ -1628,7 +1764,6 @@ int main(int argc, char* argv[])
     shaderAi::daspeka()->jyaikarawaShader();
     shaderAi::daspeka()->lanawyBaraShader();
     shaderAi::daspeka()->lanawyBaraProgram();
-
 
 
     return 0;
