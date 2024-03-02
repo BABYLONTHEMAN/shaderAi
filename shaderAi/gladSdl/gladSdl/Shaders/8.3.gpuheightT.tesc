@@ -5,13 +5,13 @@ layout(vertices=4) out;
 uniform mat4 model;
 uniform mat4 view;
 
-in vec2 TexCoord[];
+in vec2 TexCoords[];
 out vec2 TextureCoord[];
 
 void main()
 {
     gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
-    TextureCoord[gl_InvocationID] = TexCoord[gl_InvocationID];
+    TextureCoord[gl_InvocationID] = TexCoords[gl_InvocationID];
 
     if(gl_InvocationID == 0)
     {

@@ -709,11 +709,11 @@ std::string Shader::ReadFile(const char* fileloc)
 struct Vertex {
     glm::vec3 Position;
     glm::vec3 Normal;
-    glm::vec2 TexCoord;
+    glm::vec2 TexCoords;
     glm::vec3 Tangent;
 
     Vertex(const glm::vec3& pos, const glm::vec3& normal, const glm::vec2& tex, const glm::vec3& tangent)
-        : Position(pos), Normal(normal), TexCoord(tex), Tangent(tangent) {}
+        : Position(pos), Normal(normal), TexCoords(tex), Tangent(tangent) {}
 };
 
 
@@ -1017,76 +1017,19 @@ void skyBox::DrawSkybox(glm::mat4 viewMatrix, glm::mat4 projectionMatrix) {
     glDepthMask(GL_TRUE);
 }
 
-
-
 skyBox::~skyBox() {}
-
-
-/////////////////Skybox.cpp////////////////
-///////////////////////////////////
-/////////////////////////////////////
-
-
-
-/////////////////Skybox.cpp////////////////</>
-///////////////////////////////////
-/////////////////////////////////////
-/////////////////SKYBOX//////////////</>
 
 skyBox skybox;
 void Shader::renderPass(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 {
     //glfwPollEvents();
     SDL_Event event;
-    //glViewport(110, 10, 1366, 768);
-
-    //glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     skybox.DrawSkybox(viewMatrix, projectionMatrix);
-    //meshterrain.wenayTerrainBkesha(viewMatrix, projectionMatrix);
-    //meshterrain.wenayTerrainBkesha(viewMatrix, projectionMatrix);
-
-    //glUseProgram(shader);
-
     glUseProgram(ID);
-    //uniformModel = shaderList[0].GetModelLocation();
-    //uniformModel2 = shaderList[0].GetModelLocation();// <|--------- this maybe works who knows?
     uniformProjection = shaderList[0].GetProjectionLocation();
-    // you can use it without GetProjectionLocation like this >>>>>>>> uniformProjection = shaderList[0].uniformProjection;
-
     uniformView = shaderList[0].GetViewLocation();
-    //uniformAmbientColour = shaderList[0].GetAmbientColourLocation();
-    //uniformAmbientIntensity = shaderList[0].GetAmbientIntensityLocation();
-    //uniformDirection = shaderList[0].GetDirectionLocation();
-    //uniformDiffuseintensity = shaderList[0].GetDiffuseIntensityLocation();
-           /* uniformEyePosition = shaderList[0].GetEyePositionLocation();
-            uniformSpecularIntensity = shaderList[0].GetSpecularIntensityLocation();
-            uniformShininess = shaderList[0].GetShininessLocation();*/
-
-
-            //glm::vec3 LowerLight = camera.getCameraPosition();
-           // LowerLight.y -= 0.3f;
-            //spotLights[0].SetFlash(LowerLight, camera.getCameraDirection()); //moving Torch 'Spotlight.cpp, .h
-
-            //shaderList[0].SetDirectionalLight(&mainLight);
-            //shaderList[0].SetPointLights(pointLights, pointLightCount);
-           // shaderList[0].SetSpotLights(spotLights, spotLightCount);
-
-
-
-            //glm 
     glm::mat4 model(1.0f);
-
     glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-    // glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(camera.calculateViewMatrix()));
-    // glUniform3f(uniformEyePosition, camera.getCameraPosition().x, camera.getCameraPosition().y,
-      //   camera.getCameraPosition().z);
-
-
-     //CreateObjects();
-     //createShaders();
-
 }
 //</SHADER
 
@@ -1253,7 +1196,6 @@ private:
 
 
 
-
 ////////////////INPUT////////////////
 
 ////////////////</INPUT>/////////////////
@@ -1262,21 +1204,24 @@ private:
 
 // 
 //definey textureId
-GLuint textureID;
+
 
 //GLuint textureID;
 GLuint loadCubemap(std::vector<std::string> faces, const std::string& defaultFace) {
-    glBindTexture(GL_TEXTURE_2D, textureID);
+    unsigned int textureID;
+    //glBindTexture(GL_TEXTURE_2D, textureID);
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
     // Bind the texture object
-   
+
     int width, height, nrChannels;
     for (unsigned int i = 0; i < faces.size(); i++) {
-        unsigned char* data = nullptr;
+        unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
         data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
         if (data) {
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+            );
             stbi_image_free(data);
         }
         else {
@@ -1327,6 +1272,54 @@ bool fileExists(const std::string& filename) {
 }
 int main(int argc, char* argv[])
 {
+
+    // Vertices for rendering a cube
+    float skyboxVertices[] = {
+        // positions
+        -1.0f,  1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+        -1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f
+    };
+
+
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         std::cerr << "Failed to initialize SDL: " << SDL_GetError() << std::endl;
@@ -1369,35 +1362,27 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+    // skybox VAO
+    GLuint skyboxVBO, skyboxVAO;
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    //glBindVertexArray(0);
 
+    // load textures
+    // -------------
     std::vector<std::string> faces{
     "Textures/skybox/xpos.png",
-    "Textures/skybox/xneg.pn",
+    "Textures/skybox/xneg.png",
     "Textures/skybox/ypos.png",
     "Textures/skybox/yneg.png",
     "Textures/skybox/zpos.png",
-    "Textures/skybox/x.png"
+    "Textures/skybox/xneg.png"
     };
-
-    //genius AI way to tell if the .png exist or not
-     // Check if all face files exist
-
-    /*
-    la sarw int main() :
-    
-    bool fileExists(const std::string & filename) {
-        std::ifstream file(filename);
-        return file.good();
-    }
-    la naw int main():
-
-    for (const std::string& face : faces) {
-        if (!fileExists(face)) {
-            std::cerr << "Error: File not found: " << face << std::endl;
-            return 1; // Return error code indicating failure
-        }
-    }
-    */
     
     const std::string defaultFace = "Textures/skybox/muspelheim.png";
 
@@ -1416,38 +1401,6 @@ int main(int argc, char* argv[])
             std::cerr << "\033[1;32mBro xoty shamal: \033[0m" << "\033[36m ...... \033[0m" << "\033[35m"<< face<< "\033[0m"  << "\033[33m ...... \033[0m" << std::endl;
 
         }
-        //loading bar ..... 
-        //constexpr int barWidth = 40;
-        //while (true) {
-        //    static int pos = 0;
-        //    std::cerr << "\r\033[1;32m Bro xoty shamal: \033[0m" << "\033[36m [";
-        //    for (int i = 0; i < barWidth; ++i) {
-        //        if (i < pos) std::cerr << "=";
-        //        else if (i == pos) std::cerr << ">";
-        //        else std::cerr << " ";
-        //    }
-        //    std::cerr << "] " << "\033[42m" << face << "\033[0m" << std::flush;
-        //    pos = (pos + 1) % (barWidth + 1);
-        //    std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Adjust the delay time as needed
-        //}
-        //loading bar ..... </>
-
-       /* for (size_t i = 0; i < 10; i++)
-       {
-            std::cout << "\..>   " << std::flush;
-            std::cout << "\...>   " << std::flush;
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
-            std::cout << "\....>   " << std::flush;
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
-            std::cout << "\r...< " << std::flush;
-            std::cout << "\r..< " << std::flush;
-            std::cout << "\r.< " << std::flush;
-            std::cout << "\< " << std::flush;
-            std::cout << "\> " << std::flush;
-            std::cout << "\.> " << std::flush;
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
-        }*/
-
     }
 
     GLuint cubemapTexture = loadCubemap(faces, defaultFace); 
@@ -1460,10 +1413,17 @@ int main(int argc, char* argv[])
 
     GLint maxTessLevel;
     glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &maxTessLevel);
-    std::cout << "Max available tess level: " << maxTessLevel << std::endl;
+    std::cout << "\033[35mMax available tess level: \033[0m"<<"\033[33m" <<maxTessLevel <<"\033[0m"<< std::endl;
 
+
+
+    // shader configuration
+    // --------------------
+    shaderAi::daspeka()->setInt("skybox", 0);
+    
     // configure global opengl state
     // -----------------------------
+    
     glEnable(GL_DEPTH_TEST);
     //ShaderAi part
     shaderAi::daspeka()->drwstkaProgram();
@@ -1483,8 +1443,6 @@ int main(int argc, char* argv[])
 
     // build and compile our shader program
     // ------------------------------------
-    //shaderAi tessHeightMapShader;
-
     // load and create a texture
     // -------------------------
     unsigned int texture;
@@ -1553,13 +1511,11 @@ int main(int argc, char* argv[])
     std::cout << "Processing " << rez * rez * 4 << " vertices in vertex shader" << std::endl;
     //GLuint textureID;
     // first, configure the cube's VAO (and terrainVBO)
-    unsigned int terrainVAO, terrainVBO, skyboxVAO , skyboxVBO;
+    unsigned int terrainVAO, terrainVBO; // skyboxVAO, skyboxVBO;
     glGenVertexArrays(1, &terrainVAO);
     glBindVertexArray(terrainVAO);
  
-    //bo skybox VAO stuff
-    glGenVertexArrays(1, &skyboxVAO);
-    glBindVertexArray(skyboxVAO);
+  
 
    //glGenBuffers(1, &skyboxVBO);
     //glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
@@ -1577,7 +1533,7 @@ int main(int argc, char* argv[])
 
     glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);
 
-    glGenTextures(1, &textureID);
+    glGenTextures(1, &texture);
 
 
  
@@ -1589,7 +1545,8 @@ int main(int argc, char* argv[])
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // Load texture data and upload to GPU
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
     glGenerateMipmap(GL_TEXTURE_2D);
 
  
@@ -1613,17 +1570,13 @@ int main(int argc, char* argv[])
 
 
     while (running) {
-        // glViewport(0,0,800,800);
+        // glViewport(0,0,800,800); 
+       
 
-                                         //* (5.0f * (deltaTime * 0.001));
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         float currentFrame = SDL_GetTicks();
-
-
         scroll_callback(&event);
-
         while (SDL_PollEvent(&event)) {
+           
             switch (event.type) {
             case SDL_QUIT:
                 running = false;
@@ -1704,9 +1657,6 @@ int main(int argc, char* argv[])
 
             }
         }
-
-
-
         deltaTime = (currentFrame - lastFrame) / 1000.0f; // Convert milliseconds to seconds
         lastFrame = currentFrame;
 
@@ -1715,8 +1665,8 @@ int main(int argc, char* argv[])
         if (frameDelay > frameTime) {
             SDL_Delay(frameDelay - frameTime);
         }
-
-
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
         glm::mat4 view = camera.GetViewMatrix();
@@ -1726,46 +1676,44 @@ int main(int argc, char* argv[])
         glm::mat4 position;
         glm::mat4 model = glm::mat4(1.0f);
         shaderAi::daspeka()->setMat4("model", model);
-        //glm::mat4 model = glm::mat4(1.0f);
-       /* Transform model2;
-        model2.SetScale(1.0f, 1.0f, 1.0f);
-        model2.SetPosition(1.0f, 1.0f, 1.0f);
-        model2.GetScale();*/
-
-        //render skybox 
-        // Render skybox cube
+        
        // glDepthMask(GL_FALSE);
-       // glDepthMask(GL_TRUE); 
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glDepthMask(GL_FALSE);
-        glBindVertexArray(skyboxVAO);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-       // shaderAi::daspeka()->setMat4("projection", projection);
-        //shaderAi::daspeka()->setMat4("view", view);
-        // </render skybox
+        glDepthFunc(GL_LEQUAL);
         // render the terrain
         glBindVertexArray(terrainVAO);
         glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS * rez * rez);
         glBindVertexArray(0);
+        // Draw skybox
+        shaderAi::daspeka()->drwstkaProgram();
+        shaderAi::daspeka()->setMat4("view", view);
+        shaderAi::daspeka()->setMat4("projection", projection);
+        glm::mat4 modelSky = glm::mat4(1.0f);
+        shaderAi::daspeka()->setMat4("modelSky", modelSky);
+
+        glDepthMask(GL_FALSE);
+
+        glBindVertexArray(skyboxVAO);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices for a cube
+        glBindVertexArray(0);
+        glDepthFunc(GL_LESS); // set depth function back to default
+
+        glDepthMask(GL_TRUE);
 
         SDL_GL_SwapWindow(window);
     }
  
-    glDeleteVertexArrays(1, &terrainVAO);
+   /* glDeleteVertexArrays(1, &terrainVAO);
     glDeleteBuffers(1, &terrainVBO);
 
+    shaderAi::daspeka()->jyaikarawaShader();
+    shaderAi::daspeka()->lanawyBaraShader();
+    shaderAi::daspeka()->lanawyBaraProgram();*/
     
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
     SDL_Quit();
-
-    shaderAi::daspeka()->jyaikarawaShader();
-    shaderAi::daspeka()->lanawyBaraShader();
-    shaderAi::daspeka()->lanawyBaraProgram();
-
-
     return 0;
 }
 
