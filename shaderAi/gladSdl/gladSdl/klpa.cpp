@@ -17,7 +17,7 @@
 //#include <GL/glew.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-
+unsigned int loadTexture(const char* path);
 void mouse_callback(SDL_Event* event);
 void scroll_callback(SDL_Event* event);
 bool running = true;
@@ -64,6 +64,17 @@ public:
     void setMat2(const std::string& name, const glm::mat2& mat) const;
     void setMat3(const std::string& name, const glm::mat3& mat) const;
     void setMat4(const std::string& name, const glm::mat4& mat) const;
+
+    void bakaryBena();
+    void set(const std::string& name, bool value) const;
+    void set(const std::string& name, int value) const;
+    void set(const std::string& name, float value) const;
+    void set(const std::string& name, glm::mat4 value) const;
+    void set(const std::string& name, float r, float g, float b) const;
+    void set(const std::string& name, glm::vec3 value) const;
+
+
+
 private:
     shaderAi();
     shaderAi(const shaderAi&);
@@ -181,7 +192,7 @@ bool shaderAi::koikarawaShader(const std::string& nawiFile, JoryShader joryShade
 
     if (!file)
     {
-        std::cout << "\n err xwendnaway filey shader (file.open(nawiFile) ... leraya err haya) : " << nawiFile;
+        std::cout << "\033[33m\n err xwendnaway filey shader (file.open(nawiFile) ...\033[0m"<<"\033[1;32mAm file'a chakka \033[0m" << "\033[1;33m" <<">>"<< " \033[0m" << "\033[1;35m" << nawiFile << "\033[0m";
     }
 
     while (!file.eof())
@@ -236,7 +247,7 @@ bool shaderAi::bibastawaShader()
     glGetProgramiv(m_IdprogramyShaderaka, GL_LINK_STATUS, &halayCode);
     if (halayCode == GL_TRUE)
     {
-        std::cout << "\n bastnaway shader sarkawtw bw \n";
+        std::cout << "\033[1;36m" << "\n bastnaway shader sarkawtw bw\n\n";
     }
     else
     {
@@ -257,6 +268,7 @@ void shaderAi::jyaikarawaShader() //jyaikarawaShader ---=====wata> Detach...
     glDetachShader(m_IdprogramyShaderaka, m_IdFragmentyShader);
     glDetachShader(m_IdprogramyShaderaka, m_IdTessCtrlShader);
     glDetachShader(m_IdprogramyShaderaka, m_IdTessellEvaShader);
+    std::cout << "\033[1;33m" << "\n jyakrdnaway Shader Sarkawtw bw" << " \033[0m" << std::endl;
 }
 
 void shaderAi::lanawyBaraShader() //lanawyBaraShader ---=====wata> Delete...
@@ -333,6 +345,43 @@ void shaderAi::setMat4(const std::string& name, const glm::mat4& mat) const
     glUniformMatrix4fv(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), 1, GL_FALSE, &mat[0][0]);
 
 }
+
+
+//set stuff /*https://github.com/Khasehemwy/LearnOpenGL/blob/master/OpenGL/Shader.h */
+void shaderAi::bakaryBena()
+{
+    glUseProgram(this->m_IdprogramyShaderaka);
+}
+
+
+void shaderAi::set(const std::string& name, bool value) const
+{
+    glUniform1i(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), (int)value);
+}
+void shaderAi::set(const std::string& name, int value) const
+{
+    glUniform1i(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), value);
+}
+void shaderAi::set(const std::string& name, float value) const
+{
+    glUniform1f(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), value);
+}
+
+void shaderAi::set(const std::string& name, glm::mat4 value) const
+{
+    glUniformMatrix4fv(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
+}
+
+void shaderAi::set(const std::string& name, float r, float g, float b) const
+{
+    glUniform3f(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), r, g, b);
+}
+void shaderAi::set(const std::string& name, glm::vec3 value) const
+{
+    glUniform3fv(glGetUniformLocation(m_IdprogramyShaderaka, name.c_str()), 1, &value[0]);
+}
+
+
 //set w met </>
 //</shaderAi.cpp>
 
@@ -710,10 +759,11 @@ struct Vertex {
     glm::vec3 Position;
     glm::vec3 Normal;
     glm::vec2 TexCoords;
+    glm::vec3 TexCoord; //for skybox, it's vec2? why? I don't know myself dammit
     glm::vec3 Tangent;
 
-    Vertex(const glm::vec3& pos, const glm::vec3& normal, const glm::vec2& tex, const glm::vec3& tangent)
-        : Position(pos), Normal(normal), TexCoords(tex), Tangent(tangent) {}
+    Vertex(const glm::vec3& pos, const glm::vec3& normal, const glm::vec2& tex, glm::vec3& texx, const glm::vec3& tangent)
+        : Position(pos), Normal(normal), TexCoords(tex), TexCoord(texx), Tangent(tangent) {}
 };
 
 
@@ -813,9 +863,9 @@ void Mesh::createMesh(const GLfloat* vertices, const unsigned int* indices, unsi
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 8, (void*)(sizeof(GLfloat) * 3));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(GLfloat) * 8, (void*)(sizeof(GLfloat) * 5));
+    
     glEnableVertexAttribArray(2);
-
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoord));
     //attribpointer for terrainFlat
     glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, Tangent));
     glEnableVertexAttribArray(3);
@@ -1208,20 +1258,19 @@ private:
 
 //GLuint textureID;
 GLuint loadCubemap(std::vector<std::string> faces, const std::string& defaultFace) {
-    unsigned int textureID;
-    //glBindTexture(GL_TEXTURE_2D, textureID);
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
+    unsigned int skybox;
+    glGenTextures(1, &skybox);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox);
+    //glBindTexture(GL_TEXTURE_2D, skybox);
     // Bind the texture object
 
     int width, height, nrChannels;
     for (unsigned int i = 0; i < faces.size(); i++) {
         unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
-        data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        //data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
         if (data) {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
-            );
+                0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
             stbi_image_free(data);
         }
         else {
@@ -1236,7 +1285,7 @@ GLuint loadCubemap(std::vector<std::string> faces, const std::string& defaultFac
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-    return textureID;
+    return skybox;
 
     GLenum error = glGetError();
     if (error != GL_NO_ERROR) {
@@ -1270,6 +1319,185 @@ bool fileExists(const std::string& filename) {
     std::ifstream file(filename);
     return file.good();
 }
+
+
+//CAMERA2
+class Camera2
+{
+public:
+    // camera Attributes
+    glm::vec3 Position;
+    glm::vec3 Front;
+    glm::vec3 Up;
+    glm::vec3 Right;
+    glm::vec3 WorldUp;
+    // euler Angles
+    float Yaw;
+    float Pitch;
+    // camera options
+    float MovementSpeed;
+    float MouseSensitivity;
+    float Zoom;
+
+    // constructor with vectors
+    Camera2(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+    {
+        Position = position;
+        WorldUp = up;
+        Yaw = yaw;
+        Pitch = pitch;
+        updateCameraVectors();
+    }
+    // constructor with scalar values
+    Camera2(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+    {
+        Position = glm::vec3(posX, posY, posZ);
+        WorldUp = glm::vec3(upX, upY, upZ);
+        Yaw = yaw / 100.0f;
+        Pitch = pitch / 100.0f;
+        updateCameraVectors();
+    }
+
+    // returns the view matrix calculated using Euler Angles and the LookAt Matrix
+    glm::mat4 GetViewMatrix()
+    {
+        return glm::lookAt(Position, Position + Front, Up);
+    }
+
+    // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
+    void ProcessKeyboard(Camera_Movement direction, float deltaTime)
+    {
+        float velocity = MovementSpeed * deltaTime;
+        if (direction == FORWARD)
+            Position += Front * velocity;
+        if (direction == BACKWARD)
+            Position -= Front * velocity;
+        if (direction == LEFT)
+            Position -= Right * velocity;
+        if (direction == RIGHT)
+            Position += Right * velocity;
+    }
+
+    // processes input received from a mouse input system. Expects the offset value in both the x and y direction.
+    void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
+    {
+        xoffset *= MouseSensitivity;
+        yoffset *= MouseSensitivity;
+
+        Yaw += xoffset;
+        Pitch += yoffset;
+
+        // make sure that when pitch is out of bounds, screen doesn't get flipped
+        if (constrainPitch)
+        {
+            if (Pitch > 89.0f)
+                Pitch = 89.0f;
+            if (Pitch < -89.0f)
+                Pitch = -89.0f;
+        }
+
+        // update Front, Right and Up Vectors using the updated Euler angles
+        updateCameraVectors();
+    }
+    void zoomIn() {
+        FOV -= ZOOM; // Decrease the field of view
+        if (FOV < minFOV) FOV = minFOV;
+    }
+
+    void zoomOut() {
+        FOV += ZOOM; // Increase the field of view
+        if (FOV > maxFOV) FOV = maxFOV;
+    }
+    // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
+    void ProcessMouseScroll(float yoffset)
+    {
+        Zoom -= (float)yoffset;
+        if (Zoom < 1.0f)
+            Zoom = 1.0f;
+        if (Zoom > 45.0f)
+            Zoom = 45.0f;
+    }
+    void zoom(int amount) {
+        // Move the camera along the front vector
+        Position += Front * static_cast<float>(amount);
+    }
+
+    //to drag terrain with mouse 
+    void Pan(float xoffset, float yoffset) {
+        glm::vec3 right = glm::normalize(glm::cross(Front, WorldUp));
+        glm::vec3 up = glm::normalize(glm::cross(right, Front));
+
+        Position += right * xoffset * MouseSensitivity;
+        Position += up * yoffset * MouseSensitivity;
+    }
+private:
+    // calculates the front vector from the Camera's (updated) Euler Angles
+    void updateCameraVectors()
+    {
+        // calculate the new Front vector
+        glm::vec3 front;
+        front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+        front.y = sin(glm::radians(Pitch));
+        front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+        Front = glm::normalize(front);
+        // also re-calculate the Right and Up vector
+        Right = glm::normalize(glm::cross(Front, WorldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+        Up = glm::normalize(glm::cross(Right, Front));
+    }
+};
+
+
+/////////////////////////////////////
+///////////////CAMERA///////////////</>
+///////////////CAMERA///////////////</>
+/////////////////////////////////////
+
+
+
+
+
+// camera - give pretty starting point
+Camera2 camera2(glm::vec3(1.0f, 1.0f, 10.0f),
+    glm::vec3(0.0f, 1.0f, 0.0f),
+    -128.1f, -42.4f);
+// CAMERA2</>
+unsigned int loadTexture(char const* path)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrComponents;
+    unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum format;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+
+    return textureID;
+}
+//MAIN
 int main(int argc, char* argv[])
 {
 
@@ -1362,17 +1590,8 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    // skybox VAO
-    GLuint skyboxVBO, skyboxVAO;
-    glGenVertexArrays(1, &skyboxVAO);
-    glGenBuffers(1, &skyboxVBO);
-    glBindVertexArray(skyboxVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    //glBindVertexArray(0);
 
+    const std::string defaultFace = "Textures/skybox/muspelheim.png";
     // load textures
     // -------------
     std::vector<std::string> faces{
@@ -1383,31 +1602,53 @@ int main(int argc, char* argv[])
     "Textures/skybox/zpos.png",
     "Textures/skybox/xneg.png"
     };
-    
-    const std::string defaultFace = "Textures/skybox/muspelheim.png";
-
-    for ( std::string& face : faces) {
+    for (std::string& face : faces) {
         if (!fileExists(face)) {
             std::cerr << "\033[1;31mAm Fila Nadozrawatawa: " << face << "\033[0m" << std::endl; // Print in red
-            std::cerr << "\033[1;32mBoya aigorin bam " << "\033[1;33m" <<  "'Textures/skybox/muspelheim.png'" << " \033[0m" << "\033[1;32mdefaulta \033[0m\n";
-            std::cerr << "\033[1;36mPesh Away \033[0m" << "\033[1;31m(\033[0m" << "\033[33m'face = defaultFace;\033[0m'"<<"\033[1;31m)\033[0m"<<"\033[1;34m'face'\033[0m"
-                << "\033[1;31m britya la '\033[0m"<<  face << "'\033[0m" << std::endl; // Print in green
+            std::cerr << "\033[1;32mBoya aigorin bam " << "\033[1;33m" << "'Textures/skybox/muspelheim.png'" << " \033[0m" << "\033[1;32mdefaulta \033[0m\n";
+            std::cerr << "\033[1;36mPesh Away \033[0m" << "\033[1;31m(\033[0m" << "\033[33m'face = defaultFace;\033[0m'" << "\033[1;31m)\033[0m" << "\033[1;34m'face'\033[0m"
+                << "\033[1;31m britya la '\033[0m" << face << "'\033[0m" << std::endl; // Print in green
             face = defaultFace;
-            std::cerr << "\033[1;31mDway Away\033[0m" <<"\033[1;31m (\033[0m" <<"\033[33m'face = defaultFace;\033[0m'"<< "\033[1;31m)\033[0m" <<  "\033[1;34m'face'\033[0m"<<  "\033[1;35m britya la '\033[0m"
-                <<"\033[1;33m"<< face << " \033[0m" << std::endl; // Print in green
+            std::cerr << "\033[1;31mDway Away\033[0m" << "\033[1;31m (\033[0m" << "\033[33m'face = defaultFace;\033[0m'" << "\033[1;31m)\033[0m" << "\033[1;34m'face'\033[0m" << "\033[1;35m britya la '\033[0m"
+                << "\033[1;33m" << face << " \033[0m" << std::endl; // Print in green
         }
         else
         {
-            std::cerr << "\033[1;32mBro xoty shamal: \033[0m" << "\033[36m ...... \033[0m" << "\033[35m"<< face<< "\033[0m"  << "\033[33m ...... \033[0m" << std::endl;
+            std::cerr << "\033[1;32mBro xoty shamal: \033[0m" << "\033[36m ...... \033[0m" << "\033[35m" << face << "\033[0m" << "\033[33m ...... \033[0m" << std::endl;
 
         }
     }
 
-    GLuint cubemapTexture = loadCubemap(faces, defaultFace); 
     //</cube map>
 
     std::cerr << "\033[1;32m......\033[0m" << "\033[36m ...... \033[0m" << "\033[30m" << "\033[0m" << "\033[33m ...... \033[0m" <<
         "\033[1;32m...... \033[0m" << "\033[36m ...... \033[0m" << "\033[30m" << "\033[0m" << "\033[33m ...... \033[0m\n";
+
+    shaderAi::daspeka()->bakaryBena();
+    shaderAi::daspeka()->set("cubeMap", 0);
+    GLuint cubemapTexture = loadCubemap(faces, defaultFace);
+    // skybox VAO
+    GLuint skyboxVBO, skyboxVAO;
+    shaderAi::daspeka()->drwstkaProgram(); 
+    shaderAi::daspeka()->drwstkaShader();
+     shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.vert", shaderAi::JoryShader::VERTEX_SHADER);
+     shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.frag", shaderAi::JoryShader::FRAGMENT_SHADER);
+    //shaderAi::daspeka()->bilkenaShader();
+    //shaderAi::daspeka()->bibastawaShader();
+
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
+    glBindVertexArray(skyboxVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    
+    
+    
 
     //system("color A");
 
@@ -1419,28 +1660,32 @@ int main(int argc, char* argv[])
 
     // shader configuration
     // --------------------
-    shaderAi::daspeka()->setInt("skybox", 0);
+    //shaderAi::daspeka()->setInt("skybox", 0);
     
     // configure global opengl state
     // -----------------------------
     
-    glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_DEPTH_TEST);
     //ShaderAi part
-    shaderAi::daspeka()->drwstkaProgram();
-    shaderAi::daspeka()->drwstkaShader();
-   shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheight.vert", shaderAi::JoryShader::VERTEX_SHADER);
-   shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheight.frag", shaderAi::JoryShader::FRAGMENT_SHADER);
-    shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheightT.tesc", shaderAi::JoryShader::TESS_CONTROL_SHADER);
-    shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheightT.tese", shaderAi::JoryShader::TESS_EVALUATION_SHADER);
-    shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.vert", shaderAi::JoryShader::VERTEX_SHADER);
-    shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.frag", shaderAi::JoryShader::FRAGMENT_SHADER);
-    shaderAi::daspeka()->bilkenaShader();
+   
+
+   /* shaderAi::daspeka()->bilkenaShader();
     shaderAi::daspeka()->bibastawaShader();
-    //shaderAi::daspeka()->koikarawaShader("",);
-    //shaderAi::daspeka()->();
 
+    shaderAi::daspeka()->jyaikarawaShader();
+    shaderAi::daspeka()->lanawyBaraShader();
+    shaderAi::daspeka()->lanawyBaraProgram();*/
+
+    //shaderAi::daspeka()->drwstkaProgram();
+    //shaderAi::daspeka()->drwstkaShader();
+   /* shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.vert", shaderAi::JoryShader::VERTEX_SHADER);
+    shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.frag", shaderAi::JoryShader::FRAGMENT_SHADER);*/
+    
+    
+    //shaderAi::daspeka()->koikarawaShader("Shaders/shader.vert", shaderAi::JoryShader::VERTEX_SHADER);
+    //shaderAi::daspeka()->koikarawaShader("Shaders/shader.frag", shaderAi::JoryShader::FRAGMENT_SHADER);
+  
     //ShaderAi part </
-
     // build and compile our shader program
     // ------------------------------------
     // load and create a texture
@@ -1450,18 +1695,18 @@ int main(int argc, char* argv[])
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
     // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    //// set texture filtering parameters
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // load image, create texture and generate mipmaps
     int width, height, nrChannels;
     // The FileSystem::getPath(...) is part of the GitHub repository so we can find files on any IDE/platform; replace it with your own image path.
-    unsigned char* data = stbi_load("Textures/FRC.jpg", &width, &height, &nrChannels, 0);
-    if (data)
+    unsigned char* dataTess = stbi_load("Textures/Fog.png", &width, &height, &nrChannels, 0);
+    if (dataTess)
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, dataTess);
         glGenerateMipmap(GL_TEXTURE_2D);
 
         // tessHeightMapShader.setInt("heightMap", 0);
@@ -1471,7 +1716,7 @@ int main(int argc, char* argv[])
     {
         std::cout << "Failed to load texture" << std::endl;
     }
-    stbi_image_free(data);
+    stbi_image_free(dataTess);
 
     // set up vertex data (and buffer(s)) and configure vertex attributes
     // ------------------------------------------------------------------
@@ -1514,11 +1759,8 @@ int main(int argc, char* argv[])
     unsigned int terrainVAO, terrainVBO; // skyboxVAO, skyboxVBO;
     glGenVertexArrays(1, &terrainVAO);
     glBindVertexArray(terrainVAO);
- 
-  
 
-   //glGenBuffers(1, &skyboxVBO);
-    //glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    //glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     glGenBuffers(1, &terrainVBO);
     glBindBuffer(GL_ARRAY_BUFFER, terrainVBO);
@@ -1533,25 +1775,44 @@ int main(int argc, char* argv[])
 
     glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);
 
-    glGenTextures(1, &texture);
-
-
- 
-
     // Set texture parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // Load texture data and upload to GPU
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataTess);
+    if (dataTess)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, dataTess);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        shaderAi::daspeka()->setInt("heightMap", 0);
+        //shaderAi::daspeka()->setInt("skycube", 0); //????
+        //shaderAi::daspeka()->setInt("cubemap", 0);//??????
+        std::cout << "\033[1;32m Loady heightmapy dataTess ba qabaray :\033[0m" << 
+            "\033[1;32m" << height << " x " << width << "\033[0m" << std::endl;
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else
+    {
+        std::cout << "datatess bwny nia" << std::endl;
+    }
+    
+    
+    shaderAi::daspeka()->drwstkaProgram();
+    shaderAi::daspeka()->drwstkaShader();
 
-    glGenerateMipmap(GL_TEXTURE_2D);
+    shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheight.vert", shaderAi::JoryShader::VERTEX_SHADER);
+    shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheight.frag", shaderAi::JoryShader::FRAGMENT_SHADER);
+    shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheightT.tesc", shaderAi::JoryShader::TESS_CONTROL_SHADER);
+    shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheightT.tese", shaderAi::JoryShader::TESS_EVALUATION_SHADER);
 
- 
+    shaderAi::daspeka()->bilkenaShader();
+    shaderAi::daspeka()->bibastawaShader();
     //cube map
- 
+
+  
     //SHADER2 -----------
 
     //not implemented yet
@@ -1570,8 +1831,9 @@ int main(int argc, char* argv[])
 
 
     while (running) {
-        // glViewport(0,0,800,800); 
-       
+        //glViewport(0,0,800,800); 
+        glClearColor(0.15f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         float currentFrame = SDL_GetTicks();
         scroll_callback(&event);
@@ -1619,7 +1881,13 @@ int main(int argc, char* argv[])
                     int y = event.motion.y;
                     int dx = x - startX;
                     int dy = y - startY;
-                    std::cout << "Dragging by: " << dx << ", " << dy << std::endl;
+                    std::cout <<"\033[0;36m" << 
+                        "Rakeshany Arasta: \033[0m" <<
+                        "\033[0;33m" << dx << 
+                        "\033[0m" << "\033[0;34m" 
+                        << ", " << " \033[0m" <<
+                        "\033[0;33m" << dy <<
+                        "\033[0m" << std::endl;
 
                     // Optionally: Update the start position for smoother dragging
                     camera.Pan(static_cast<float>(-dx), static_cast<float>(dy));
@@ -1665,51 +1933,89 @@ int main(int argc, char* argv[])
         if (frameDelay > frameTime) {
             SDL_Delay(frameDelay - frameTime);
         }
-        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+       
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
+
         glm::mat4 view = camera.GetViewMatrix();
+        /*glm::mat4 view = camera2.GetViewMatrix();*/
         shaderAi::daspeka()->setMat4("projection", projection);
         shaderAi::daspeka()->setMat4("view", view);
         // world transformation
         glm::mat4 position;
         glm::mat4 model = glm::mat4(1.0f);
         shaderAi::daspeka()->setMat4("model", model);
-        
-       // glDepthMask(GL_FALSE);
-        glDepthFunc(GL_LEQUAL);
-        // render the terrain
-        glBindVertexArray(terrainVAO);
-        glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS * rez * rez);
-        glBindVertexArray(0);
-        // Draw skybox
-        shaderAi::daspeka()->drwstkaProgram();
-        shaderAi::daspeka()->setMat4("view", view);
-        shaderAi::daspeka()->setMat4("projection", projection);
-        glm::mat4 modelSky = glm::mat4(1.0f);
-        shaderAi::daspeka()->setMat4("modelSky", modelSky);
+        shaderAi::daspeka()->setVec3("cameraPos", camera.Position);
 
+        // Draw skybox
+        glm::mat4 modelSky = glm::mat4(1.0f);
+        bool isEnableDepthTest = false;
+        if (glIsEnabled(GL_DEPTH_TEST)) {
+            isEnableDepthTest = true;
+            std::cout << "\033[36m\nGl depth test enabled" << "\033[33m" << std::endl;
+        }
+
+        glDisable(GL_DEPTH_TEST);
+
+        shaderAi::daspeka()->bakaryBena();
+
+        shaderAi::daspeka()->setMat4("modelSky", modelSky);
+        view = camera.GetViewMatrix();
+        //projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.01f, 10000.0f);
+        shaderAi::daspeka()->set("viewSky", view);
+        shaderAi::daspeka()->set("projectionSky", projection);
+
+        
+
+        // <Skytexture>
+        shaderAi::daspeka()->set("heightMap", 0);
+        shaderAi::daspeka()->setInt("skybox", 0);
+
+        cubemapTexture = loadCubemap(faces, defaultFace);
+
+        glGenVertexArrays(1, &skyboxVAO);
+        glGenBuffers(1, &skyboxVBO);
+        glBindVertexArray(skyboxVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        // </Skytexture//
+        //glDepthFunc(GL_LEQUAL);
         glDepthMask(GL_FALSE);
 
+        glBindVertexArray(terrainVAO);
+        glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS* rez* rez);
+        glBindVertexArray(0);
+
+
+        //drawSkybox
         glBindVertexArray(skyboxVAO);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
         glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices for a cube
+        if (isEnableDepthTest) { glEnable(GL_DEPTH_TEST); }
+        //glDepthMask(GL_TRUE);
+
         glBindVertexArray(0);
-        glDepthFunc(GL_LESS); // set depth function back to default
+        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+        glClear(GL_DEPTH_BUFFER_BIT);
 
-        glDepthMask(GL_TRUE);
-
+       // glDepthMask(GL_FALSE);
+        //glDepthFunc(GL_LEQUAL);
+        // render the terrain
+       
         SDL_GL_SwapWindow(window);
     }
  
-   /* glDeleteVertexArrays(1, &terrainVAO);
-    glDeleteBuffers(1, &terrainVBO);
+   //glDeleteVertexArrays(1, &terrainVAO);
+    //glDeleteBuffers(1, &terrainVBO);
 
     shaderAi::daspeka()->jyaikarawaShader();
     shaderAi::daspeka()->lanawyBaraShader();
-    shaderAi::daspeka()->lanawyBaraProgram();*/
+    shaderAi::daspeka()->lanawyBaraProgram();
     
     SDL_GL_DeleteContext(context);
     SDL_DestroyWindow(window);
@@ -1779,6 +2085,5 @@ void scroll_callback(SDL_Event* event) {
     //SDL_Event event;
 
 }
-
 
 
