@@ -2072,7 +2072,7 @@ int main(int argc, char* argv[])
    // Load texture data and upload to GPU
    if (dataTess)
    {
-       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
            GL_UNSIGNED_BYTE, dataTess);
        glGenerateMipmap(GL_TEXTURE_2D);
        shaderAi::daspeka()->setInt("heightMap", 0);
@@ -2324,11 +2324,12 @@ int main(int argc, char* argv[])
             std::cerr << "Error ama glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);: " << error << std::endl;
         }
         
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        viewSky = camera.GetViewMatrix();
+        //glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         // Bind the VAO for the skybox
-        //shaderAi::daspeka()->bakaryBena();
+        glDepthMask(GL_FALSE);
+        shaderAi::daspeka()->bakaryBena();
+        viewSky = camera.GetViewMatrix();
         shaderAi::daspeka()->set("projectionSky", projection);
         shaderAi::daspeka()->set("viewSky", viewSky);
         shaderAi::daspeka()->set("skybox", 0);
@@ -2358,7 +2359,8 @@ int main(int argc, char* argv[])
 
         // Disable writing to the depth buffer
         //glDepthMask(GL_FALSE);
-        glDepthMask(GL_TRUE);
+        
+
         error = glGetError();
         if (error != GL_NO_ERROR) {
             // Handle or log the error
@@ -2373,10 +2375,12 @@ int main(int argc, char* argv[])
             std::cerr << "Error drawing skybox: " << error << std::endl;
         }
        //glDepthMask(GL_TRUE);
-        glDepthFunc(GL_LESS);
+       // glDepthFunc(GL_LESS);
         // render the terrain
-        glDepthMask(GL_FALSE);
-        glDisable(GL_BLEND);
+       
+        //glDisable(GL_BLEND);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+        glDepthMask(GL_TRUE);
         SDL_GL_SwapWindow(window);
     }
  
