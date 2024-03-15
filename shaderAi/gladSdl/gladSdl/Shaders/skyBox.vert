@@ -2,7 +2,7 @@
 
 layout (location = 0) in vec3 aPos;
 
-out vec3 TexCoord;
+out vec3 TexCoords;
 
 uniform mat4 projectionSky;
 uniform mat4 viewSky;
@@ -10,7 +10,7 @@ uniform mat4 modelSky;
 
 void main()
 {
-    TexCoord = aPos;
+    TexCoords = aPos;
     vec4 pos = projectionSky * viewSky * vec4(aPos,1.0);
     gl_Position = pos.xyww;
 }

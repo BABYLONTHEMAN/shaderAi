@@ -15,8 +15,16 @@
 #include<../glm/glm.hpp>
 #include<../glm/gtc/type_ptr.hpp>
 //#include <GL/glew.h>
+
+#include <random>
+#include <math.h>
+
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
+
+bool swranawa = false;
 unsigned int loadTexture(const char* path);
 void mouse_callback(SDL_Event* event);
 void scroll_callback(SDL_Event* event);
@@ -25,7 +33,7 @@ bool isDragging = false;
 int startX = 0, startY = 0;
 float minFOV = 1.0f; float maxFOV = 200.0f;  float FOV = 45.0f;
 
-
+//unsigned int loadTexture(const char* path);
 static const char* vShader = "Shaders/shader.vert";
 // Fragment Shader
 static const char* fShader = "Shaders/shader.frag";
@@ -74,6 +82,7 @@ public:
     void set(const std::string& name, glm::vec3 value) const;
 
 
+    //GLuint m_IdprogramyShaderaka;
 
 private:
     shaderAi();
@@ -187,7 +196,7 @@ bool shaderAi::koikarawaShader(const std::string& nawiFile, JoryShader joryShade
         std::cout << "\033[0m";
     }
 
-    file.open(nawiFile);
+   /* file.open(nawiFile);
 
 
     if (!file)
@@ -198,6 +207,20 @@ bool shaderAi::koikarawaShader(const std::string& nawiFile, JoryShader joryShade
     while (!file.eof())
     {
         std::getline(file, text);
+        sarchawayCode += text + "\n";
+    }
+
+    file.close();*/
+
+    file.open(nawiFile);
+    if (!file.is_open())
+    {
+        std::cout << "\033[33m\n err xwendnaway filey shader (file.open(nawiFile) ...\033[0m" << "\033[1;32mAm file'a chakka \033[0m" << "\033[1;33m" << ">>" << " \033[0m" << "\033[1;35m" << nawiFile << "\033[0m";
+        return false; // Return false to indicate failure
+    }
+
+    while (std::getline(file, text))
+    {
         sarchawayCode += text + "\n";
     }
 
@@ -220,11 +243,6 @@ bool shaderAi::koikarawaShader(const std::string& nawiFile, JoryShader joryShade
 
         glGetShaderInfoLog(idShader, errSize, &errSize, errMsg);
         std::cout << "\n " << errMsg << "\n ";
-
-
-
-
-
     }
     return true;
 }
@@ -350,7 +368,7 @@ void shaderAi::setMat4(const std::string& name, const glm::mat4& mat) const
 //set stuff /*https://github.com/Khasehemwy/LearnOpenGL/blob/master/OpenGL/Shader.h */
 void shaderAi::bakaryBena()
 {
-    glUseProgram(this->m_IdprogramyShaderaka);
+    glUseProgram(m_IdprogramyShaderaka);
 }
 
 
@@ -1088,43 +1106,188 @@ void Shader::renderPass(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 ///////////////CAMERA///////////////
 /////////////////////////////////////
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
-enum Camera_Movement {
+
+
+
+
+// An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
+//class Camera
+//{
+//public:
+//    // camera Attributes
+//    glm::vec3 Position;
+//    glm::vec3 Front;
+//    glm::vec3 Up;
+//    glm::vec3 Right;
+//    glm::vec3 WorldUp;
+//    glm::vec3 centerOfRotation;
+//    // euler Angles
+//    float Yaw;
+//    float Pitch;
+//    // camera options
+//    float MovementSpeed;
+//    float MouseSensitivity;
+//    float Zoom;
+//    glm::mat4 calculateViewMatrix();
+//    // constructor with vectors
+//    Camera(glm::vec3 position = glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3 up =
+//        glm::vec3(10.0f, 1.0f, 100.0f), float yaw = YAW, float pitch = PITCH) :
+//        Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+//    {
+//        Position = position;
+//        WorldUp = up;
+//        Yaw = yaw;
+//        Pitch = pitch;
+//        updateCameraVectors();
+//    }
+//    // constructor with scalar values
+//    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) :
+//        Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+//    {
+//        Position = glm::vec3(posX, posY, posZ);
+//        WorldUp = glm::vec3(upX, upY, upZ);
+//        Yaw = yaw / 100.0f;
+//        Pitch = pitch / 100.0f;
+//        updateCameraVectors();
+//    }
+//
+//    // returns the view matrix calculated using Euler Angles and the LookAt Matrix
+//    glm::mat4 GetViewMatrix()
+//    {
+//        return glm::lookAt(Position, Position + Front, Up);
+//    }
+//
+//    // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
+//    void ProcessKeyboard(Camera_Movement direction, float deltaTime)
+//    {
+//        float velocity = MovementSpeed * deltaTime;
+//        if (direction == FORWARD)
+//            Position += Front * velocity;
+//        if (direction == BACKWARD)
+//            Position -= Front * velocity;
+//        if (direction == LEFT)
+//            Position -= Right * velocity;
+//        if (direction == RIGHT)
+//            Position += Right * velocity;
+//    }
+//
+//    // processes input received from a mouse input system. Expects the offset value in both the x and y direction.
+//    void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
+//    {
+//        xoffset *= MouseSensitivity;
+//        yoffset *= MouseSensitivity;
+//
+//        Yaw += xoffset;
+//        Pitch += yoffset;
+//
+//        // make sure that when pitch is out of bounds, screen doesn't get flipped
+//        if (constrainPitch)
+//        {
+//            if (Pitch > 89.0f)
+//                Pitch = 89.0f;
+//            if (Pitch < -89.0f)
+//                Pitch = 89.0f;
+//        }
+//
+//        // update Front, Right and Up Vectors using the updated Euler angles
+//        updateCameraVectors();
+//    }
+//    void zoomIn() {
+//        FOV -= ZOOM; // Decrease the field of view
+//        //if (FOV < minFOV) FOV = minFOV;
+//    }
+//
+//    void zoomOut() {
+//        FOV += ZOOM; // Increase the field of view
+//        //if (FOV > maxFOV) FOV = maxFOV;
+//    }
+//    // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
+//    void ProcessMouseScroll(float yoffset)
+//    {
+//        Zoom -= (float)yoffset;
+//        if (Zoom < 1.0f)
+//            Zoom = 1.0f;
+//        if (Zoom > 45.0f)
+//            Zoom = 45.0f;
+//    }
+//    void zoom(int amount) {
+//        // Move the camera along the front vector
+//        Position += Front * static_cast<float>(amount);
+//    }
+//
+//    //to drag terrain with mouse 
+//    void Pan(float xoffset, float yoffset) {
+//        glm::vec3 right = glm::normalize(glm::cross(Front, WorldUp));
+//        glm::vec3 up = glm::normalize(glm::cross(right, Front));
+//
+//        Position += right * xoffset * MouseSensitivity;
+//        Position += up * yoffset * MouseSensitivity;
+//    }
+//private:
+//    // calculates the front vector from the Camera's (updated) Euler Angles
+//    void updateCameraVectors()
+//    {
+//        // calculate the new Front vector
+//        glm::vec3 front;
+//        front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+//        front.y = sin(glm::radians(Pitch));
+//        front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+//        Front = glm::normalize(front);
+//        // also re-calculate the Right and Up vector
+//        Right = glm::normalize(glm::cross(Front, WorldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+//        Up = glm::normalize(glm::cross(Right, Front));
+//    }
+//
+//
+//
+//};
+
+//glm::mat4 Camera::camera::cameracalculateViewMatrix()
+//{
+//
+//    if (swranawa)
+//
+//        return glm::lookAt(Position, centerOfRotation, Up);
+//    else
+//        return glm::lookAt(Position, Position + Front, Up); //lookAt functioneka wata bnwara :)
+//}
+/////////////////////////////////////
+///////////////CAMERA///////////////</>
+// Define camera movements
+enum class Camera_Movement {
     FORWARD,
     BACKWARD,
     LEFT,
     RIGHT
 };
 
-// Default camera values
-const float YAW = -30.0f;
+const float YAW = -90.0f;
 const float PITCH = 0.0f;
-const float SPEED = 100.5f;
-const float SENSITIVITY = 0.01f;
-const float ZOOM = 2.0f;
+const float SPEED = 2.5f;
+const float SENSITIVITY = 0.1f;
+const float ZOOM = 45.0f;
 
-
-// An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
-class Camera
-{
+class Camera {
 public:
-    // camera Attributes
+    // Camera Attributes
     glm::vec3 Position;
     glm::vec3 Front;
     glm::vec3 Up;
     glm::vec3 Right;
     glm::vec3 WorldUp;
-    // euler Angles
+    glm::vec3 centerOfRotation;
+    // Euler Angles
     float Yaw;
     float Pitch;
-    // camera options
+    // Camera options
     float MovementSpeed;
     float MouseSensitivity;
     float Zoom;
-
-    // constructor with vectors
-    Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up =
+    float FOV;
+    // Constructor with vectors
+    Camera(glm::vec3 position = glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3 up =
         glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) :
-        Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+        Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM), FOV(45.0f)
     {
         Position = position;
         WorldUp = up;
@@ -1132,108 +1295,146 @@ public:
         Pitch = pitch;
         updateCameraVectors();
     }
-    // constructor with scalar values
-    Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) :
-        Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
-    {
-        Position = glm::vec3(posX, posY, posZ);
-        WorldUp = glm::vec3(upX, upY, upZ);
-        Yaw = yaw / 100.0f;
-        Pitch = pitch / 100.0f;
-        updateCameraVectors();
-    }
 
-    // returns the view matrix calculated using Euler Angles and the LookAt Matrix
-    glm::mat4 GetViewMatrix()
-    {
+    // Returns the view matrix calculated using Euler Angles and the LookAt Matrix
+    glm::mat4 GetViewMatrix() const {
         return glm::lookAt(Position, Position + Front, Up);
     }
+    glm::mat4 calculateViewMatrix();
+    // Processes input received from any keyboard-like input system
+    void ProcessKeyboard(Camera_Movement direction, float deltaTime);
 
-    // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-    void ProcessKeyboard(Camera_Movement direction, float deltaTime)
-    {
-        float velocity = MovementSpeed * deltaTime;
-        if (direction == FORWARD)
-            Position += Front * velocity;
-        if (direction == BACKWARD)
-            Position -= Front * velocity;
-        if (direction == LEFT)
-            Position -= Right * velocity;
-        if (direction == RIGHT)
-            Position += Right * velocity;
-    }
+    // Processes input received from a mouse input system
+    void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true);
 
-    // processes input received from a mouse input system. Expects the offset value in both the x and y direction.
-    void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
-    {
-        xoffset *= MouseSensitivity;
-        yoffset *= MouseSensitivity;
+    // Processes input received from a mouse scroll-wheel event
+    void ProcessMouseScroll(float yoffset);
 
-        Yaw += xoffset;
-        Pitch += yoffset;
+    // Zooms the camera in
+    void zoomIn();
 
-        // make sure that when pitch is out of bounds, screen doesn't get flipped
-        if (constrainPitch)
-        {
-            if (Pitch > 89.0f)
-                Pitch = 89.0f;
-            if (Pitch < -89.0f)
-                Pitch = 89.0f;
-        }
+    // Zooms the camera out
+    void zoomOut();
 
-        // update Front, Right and Up Vectors using the updated Euler angles
-        updateCameraVectors();
-    }
-    void zoomIn() {
-        FOV -= ZOOM; // Decrease the field of view
-        //if (FOV < minFOV) FOV = minFOV;
-    }
+    // Zooms the camera with a specified amount
+    void zoom(int amount);
 
-    void zoomOut() {
-        FOV += ZOOM; // Increase the field of view
-        //if (FOV > maxFOV) FOV = maxFOV;
-    }
-    // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
-    void ProcessMouseScroll(float yoffset)
-    {
-        Zoom -= (float)yoffset;
-        if (Zoom < 1.0f)
-            Zoom = 1.0f;
-        if (Zoom > 45.0f)
-            Zoom = 45.0f;
-    }
-    void zoom(int amount) {
-        // Move the camera along the front vector
-        Position += Front * static_cast<float>(amount);
-    }
+    // Pans the camera with a specified offset
+    void Pan(float xoffset, float yoffset);
 
-    //to drag terrain with mouse 
-    void Pan(float xoffset, float yoffset) {
-        glm::vec3 right = glm::normalize(glm::cross(Front, WorldUp));
-        glm::vec3 up = glm::normalize(glm::cross(right, Front));
+    // Sets the rotation center of the camera
+    void SetRotationCenter(glm::vec3 newCenter);
 
-        Position += right * xoffset * MouseSensitivity;
-        Position += up * yoffset * MouseSensitivity;
-    }
 private:
-    // calculates the front vector from the Camera's (updated) Euler Angles
-    void updateCameraVectors()
-    {
-        // calculate the new Front vector
-        glm::vec3 front;
-        front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        front.y = sin(glm::radians(Pitch));
-        front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
-        Front = glm::normalize(front);
-        // also re-calculate the Right and Up vector
-        Right = glm::normalize(glm::cross(Front, WorldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
-        Up = glm::normalize(glm::cross(Right, Front));
-    }
+    // Calculates the front vector from the Camera's (updated) Euler Angles
+    void updateCameraVectors();
 };
+//cpp
+void Camera::ProcessKeyboard(Camera_Movement direction, float deltaTime) {
+    float velocity = MovementSpeed * deltaTime;
+    if (direction == Camera_Movement::FORWARD)
+        Position += Front * velocity;
+    if (direction == Camera_Movement::BACKWARD)
+        Position -= Front * velocity;
+    if (direction == Camera_Movement::LEFT)
+        Position -= Right * velocity;
+    if (direction == Camera_Movement::RIGHT)
+        Position += Right * velocity;
+}
+
+void Camera::ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch) {
+    xoffset *= MouseSensitivity;
+    yoffset *= MouseSensitivity;
+
+    Yaw += xoffset;
+    Pitch += yoffset;
+
+    // Make sure that when pitch is out of bounds, the screen doesn't get flipped
+    if (constrainPitch) {
+        if (Pitch > 89.0f)
+            Pitch = 89.0f;
+        if (Pitch < -89.0f)
+            Pitch = -89.0f;
+    }
+
+    // Update Front, Right, and Up vectors using the updated Euler angles
+    updateCameraVectors();
+}
+
+void Camera::ProcessMouseScroll(float yoffset) {
+    Zoom -= yoffset;
+    if (Zoom < 1.0f)
+        Zoom = 1.0f;
+    if (Zoom > 45.0f)
+        Zoom = 45.0f;
+}
+
+void Camera::zoomIn() {
+    Zoom -= ZOOM; // Decrease the field of view
+}
+
+void Camera::zoomOut() {
+    Zoom += ZOOM; // Increase the field of view
+}
+
+void Camera::zoom(int amount) {
+    // Move the camera along the front vector
+    Position += Front * static_cast<float>(amount);
+}
+
+void Camera::Pan(float xoffset, float yoffset) {
+    glm::vec3 right = glm::normalize(glm::cross(Front, WorldUp));
+    glm::vec3 up = glm::normalize(glm::cross(right, Front));
+
+    Position += right * xoffset * MouseSensitivity;
+    Position += up * yoffset * MouseSensitivity;
+}
+
+void Camera::SetRotationCenter(glm::vec3 newCenter) {
+    centerOfRotation = newCenter;
+}
+
+void Camera::updateCameraVectors() {
+    // Calculate the new Front vector
+    glm::vec3 front;
+    front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+    front.y = sin(glm::radians(Pitch));
+    front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+    Front = glm::normalize(front);
+    // Also re-calculate the Right and Up vector
+    Right = glm::normalize(glm::cross(Front, WorldUp));
+    Up = glm::normalize(glm::cross(Right, Front));
+}
 
 
-/////////////////////////////////////
-///////////////CAMERA///////////////</>
+glm::mat4 Camera::calculateViewMatrix()
+{
+
+    if (swranawa)
+    {
+        glm::mat4 viewMatrix = glm::lookAt(Position, centerOfRotation, Up);
+
+        // Print out the first column vector
+        glm::vec3 column1 = glm::vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
+        std::cout << "Column 1: (" << column1.x << ", " << column1.y << ", " << column1.z << ")" << std::endl;
+
+        // Print out the second column vector
+        glm::vec3 column2 = glm::vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
+        std::cout << "Column 2: (" << column2.x << ", " << column2.y << ", " << column2.z << ")" << std::endl;
+
+        // Print out the third column vector
+        glm::vec3 column3 = glm::vec3(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2]);
+        std::cout << "Column 3: (" << column3.x << ", " << column3.y << ", " << column3.z << ")" << std::endl;
+
+        // Print out the fourth column vector (usually translation vector)
+        glm::vec3 column4 = glm::vec3(viewMatrix[0][3], viewMatrix[1][3], viewMatrix[2][3]);
+        std::cout << "Column 4: (" << column4.x << ", " << column4.y << ", " << column4.z << ")" << std::endl;
+        return glm::lookAt(Position, centerOfRotation, Up);
+    }
+    else {
+        return glm::lookAt(Position, Position + Front, Up); //lookAt functioneka wata bnwara :)
+    }
+    }
 ///////////////CAMERA///////////////</>
 /////////////////////////////////////
 //////////////Mesh.h/////////////////
@@ -1254,12 +1455,50 @@ private:
 
 // 
 //definey textureId
+GLuint loadCubemap0(std::vector<std::string> faces) {
+    unsigned int skybox;
+    glGenTextures(1, &skybox);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skybox);
+    //glBindTexture(GL_TEXTURE_2D, skybox);
+    // Bind the texture object
+
+    int width, height, nrChannels;
+    for (unsigned int i = 0; i < faces.size(); i++) {
+        unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        //data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data) {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            stbi_image_free(data);
+        }
+        else {
+            std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
+            stbi_image_free(data);
+        }
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return skybox;
+
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        // Print or log the error message
+        std::cerr << "OpenGL error: " << error << std::endl;
+    }
+}
 
 
 //GLuint textureID;
 GLuint loadCubemap(std::vector<std::string> faces, const std::string& defaultFace) {
-    unsigned int skybox;
+    GLuint skybox;
     glGenTextures(1, &skybox);
+    //glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, skybox);
     //glBindTexture(GL_TEXTURE_2D, skybox);
     // Bind the texture object
@@ -1297,7 +1536,7 @@ GLuint loadCubemap(std::vector<std::string> faces, const std::string& defaultFac
 
 
 // settings
-const unsigned int SCR_WIDTH = 1800;
+const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 720;
 const unsigned int NUM_PATCH_PTS = 4;
 
@@ -1331,6 +1570,7 @@ public:
     glm::vec3 Up;
     glm::vec3 Right;
     glm::vec3 WorldUp;
+    glm::vec3 centerOfRotation;
     // euler Angles
     float Yaw;
     float Pitch;
@@ -1362,19 +1602,20 @@ public:
     glm::mat4 GetViewMatrix()
     {
         return glm::lookAt(Position, Position + Front, Up);
+        //return glm::lookAt(Position, centerOfRotation, Up);
     }
-
+   
     // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
     void ProcessKeyboard(Camera_Movement direction, float deltaTime)
     {
         float velocity = MovementSpeed * deltaTime;
-        if (direction == FORWARD)
+        if (direction == Camera_Movement::FORWARD)
             Position += Front * velocity;
-        if (direction == BACKWARD)
+        if (direction == Camera_Movement::FORWARD)
             Position -= Front * velocity;
-        if (direction == LEFT)
+        if (direction == Camera_Movement::LEFT)
             Position -= Right * velocity;
-        if (direction == RIGHT)
+        if (direction == Camera_Movement::RIGHT)
             Position += Right * velocity;
     }
 
@@ -1497,6 +1738,38 @@ unsigned int loadTexture(char const* path)
 
     return textureID;
 }
+float randomFloat(float min, float max) {
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+    std::uniform_real_distribution<float> dis(min, max);
+    return dis(gen);
+}
+
+
+void updateRandomCamera(Camera& camera) {
+    // Randomly adjust the camera's position
+    float offsetX = randomFloat(-1.5f, 10.5f);
+    float offsetY = randomFloat(-1.5f, 10.5f);
+    float offsetZ = randomFloat(-1.5f, 10.5f);
+   
+    camera.Position += glm::vec3(offsetX, offsetY, offsetZ);
+    if (offsetX > 10.0f || offsetX < -10.0f) {
+        offsetX = offsetX > 0 ? 0.5f : -0.5f;
+    }
+
+    if (offsetY > 10.0f || offsetY < -10.0f) {
+        offsetY = offsetY > 0 ? 0.5f : -0.5f;
+    }
+
+    if (offsetZ > 10.0f || offsetZ < -10.0f) {
+        offsetZ = offsetZ > 0 ? 0.5f : -0.5f;
+    }
+    // Randomly adjust the camera's orientation
+    float pitch = randomFloat(-10.0f, 10.0f);
+    float yaw = randomFloat(-10.0f, 10.0f);
+
+    camera.ProcessMouseMovement(yaw, pitch);
+}
 //MAIN
 int main(int argc, char* argv[])
 {
@@ -1563,7 +1836,7 @@ int main(int argc, char* argv[])
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     // Create a window
-    SDL_Window* window = SDL_CreateWindow("Flying Animals", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1800, 720, SDL_WINDOW_OPENGL);
+    SDL_Window* window = SDL_CreateWindow("Flying Animals", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_OPENGL);
     if (!window) {
         std::cerr << "Failed to create window: " << SDL_GetError() << std::endl;
         SDL_Quit();
@@ -1590,7 +1863,7 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-
+   
     const std::string defaultFace = "Textures/skybox/muspelheim.png";
     // load textures
     // -------------
@@ -1624,17 +1897,18 @@ int main(int argc, char* argv[])
     std::cerr << "\033[1;32m......\033[0m" << "\033[36m ...... \033[0m" << "\033[30m" << "\033[0m" << "\033[33m ...... \033[0m" <<
         "\033[1;32m...... \033[0m" << "\033[36m ...... \033[0m" << "\033[30m" << "\033[0m" << "\033[33m ...... \033[0m\n";
 
-    shaderAi::daspeka()->bakaryBena();
-    shaderAi::daspeka()->set("cubeMap", 0);
-    GLuint cubemapTexture = loadCubemap(faces, defaultFace);
+
+
+    
+
+
+    //shaderAi::daspeka()->bakaryBena();
+
+    shaderAi::daspeka()->drwstkaProgram();
+    shaderAi::daspeka()->drwstkaShader(); 
     // skybox VAO
     GLuint skyboxVBO, skyboxVAO;
-    shaderAi::daspeka()->drwstkaProgram(); 
-    shaderAi::daspeka()->drwstkaShader();
-     shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.vert", shaderAi::JoryShader::VERTEX_SHADER);
-     shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.frag", shaderAi::JoryShader::FRAGMENT_SHADER);
-    //shaderAi::daspeka()->bilkenaShader();
-    //shaderAi::daspeka()->bibastawaShader();
+    
 
     glGenVertexArrays(1, &skyboxVAO);
     glGenBuffers(1, &skyboxVBO);
@@ -1647,194 +1921,210 @@ int main(int argc, char* argv[])
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     
-    
-    
+ 
+    shaderAi::daspeka()->drwstkaProgram();
+   shaderAi::daspeka()->drwstkaShader();
+    //shaderAi::daspeka()->bakaryBena();
+    shaderAi::daspeka()->bibastawaShader();
 
-    //system("color A");
+   shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.vert", shaderAi::JoryShader::VERTEX_SHADER);
+   shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.frag", shaderAi::JoryShader::FRAGMENT_SHADER);
 
-    GLint maxTessLevel;
-    glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &maxTessLevel);
-    std::cout << "\033[35mMax available tess level: \033[0m"<<"\033[33m" <<maxTessLevel <<"\033[0m"<< std::endl;
-
-
-
-    // shader configuration
-    // --------------------
-    //shaderAi::daspeka()->setInt("skybox", 0);
-    
-    // configure global opengl state
-    // -----------------------------
-    
-    //glEnable(GL_DEPTH_TEST);
-    //ShaderAi part
    
 
-   /* shaderAi::daspeka()->bilkenaShader();
-    shaderAi::daspeka()->bibastawaShader();
+   shaderAi::daspeka()->set("cubeMap", 0);
+   shaderAi::daspeka()->set("skybox", 0);
 
-    shaderAi::daspeka()->jyaikarawaShader();
-    shaderAi::daspeka()->lanawyBaraShader();
-    shaderAi::daspeka()->lanawyBaraProgram();*/
+   GLuint cubemapTexture = loadCubemap(faces, defaultFace);
+   //GLuint cubemapTexture0 = loadCubemap0(faces);
+    //system("color A");
 
-    //shaderAi::daspeka()->drwstkaProgram();
-    //shaderAi::daspeka()->drwstkaShader();
-   /* shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.vert", shaderAi::JoryShader::VERTEX_SHADER);
-    shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.frag", shaderAi::JoryShader::FRAGMENT_SHADER);*/
-    
-    
-    //shaderAi::daspeka()->koikarawaShader("Shaders/shader.vert", shaderAi::JoryShader::VERTEX_SHADER);
-    //shaderAi::daspeka()->koikarawaShader("Shaders/shader.frag", shaderAi::JoryShader::FRAGMENT_SHADER);
-  
-    //ShaderAi part </
-    // build and compile our shader program
-    // ------------------------------------
-    // load and create a texture
-    // -------------------------
-    unsigned int texture;
-    glGenTextures(1, &texture);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
-    // set the texture wrapping parameters
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    //// set texture filtering parameters
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // load image, create texture and generate mipmaps
-    int width, height, nrChannels;
-    // The FileSystem::getPath(...) is part of the GitHub repository so we can find files on any IDE/platform; replace it with your own image path.
-    unsigned char* dataTess = stbi_load("Textures/Fog.png", &width, &height, &nrChannels, 0);
-    if (dataTess)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, dataTess);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        // tessHeightMapShader.setInt("heightMap", 0);
-        std::cout << "Loaded heightmap of size " << height << " x " << width << std::endl;
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(dataTess);
-
-    // set up vertex data (and buffer(s)) and configure vertex attributes
-    // ------------------------------------------------------------------
-    std::vector<float> vertices;
-
-    unsigned rez = 20;
-    for (unsigned i = 0; i <= rez - 1; i++)
-    {
-        for (unsigned j = 0; j <= rez - 1; j++)
-        {
-            vertices.push_back(-width / 2.0f + width * i / (float)rez); // v.x
-            vertices.push_back(0.0f); // v.y
-            vertices.push_back(-height / 2.0f + height * j / (float)rez); // v.z
-            vertices.push_back(i / (float)rez); // u
-            vertices.push_back(j / (float)rez); // v
-
-            vertices.push_back(-width / 2.0f + width * (i + 1) / (float)rez); // v.x
-            vertices.push_back(0.0f); // v.y
-            vertices.push_back(-height / 2.0f + height * j / (float)rez); // v.z
-            vertices.push_back((i + 1) / (float)rez); // u
-            vertices.push_back(j / (float)rez); // v
-
-            vertices.push_back(-width / 2.0f + width * i / (float)rez); // v.x
-            vertices.push_back(0.0f); // v.y
-            vertices.push_back(-height / 2.0f + height * (j + 1) / (float)rez); // v.z
-            vertices.push_back(i / (float)rez); // u
-            vertices.push_back((j + 1) / (float)rez); // v
-
-            vertices.push_back(-width / 2.0f + width * (i + 1) / (float)rez); // v.x
-            vertices.push_back(0.0f); // v.y
-            vertices.push_back(-height / 2.0f + height * (j + 1) / (float)rez); // v.z
-            vertices.push_back((i + 1) / (float)rez); // u
-            vertices.push_back((j + 1) / (float)rez); // v
-        }
-    }
-    std::cout << "Loaded " << rez * rez << " patches of 4 control points each" << std::endl;
-    std::cout << "Processing " << rez * rez * 4 << " vertices in vertex shader" << std::endl;
-    //GLuint textureID;
-    // first, configure the cube's VAO (and terrainVBO)
-    unsigned int terrainVAO, terrainVBO; // skyboxVAO, skyboxVBO;
-    glGenVertexArrays(1, &terrainVAO);
-    glBindVertexArray(terrainVAO);
-
-    //glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glGenBuffers(1, &terrainVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, terrainVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
-
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    // texCoord attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));
-    glEnableVertexAttribArray(1);
-
-    glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);
-
-    // Set texture parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Load texture data and upload to GPU
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, dataTess);
-    if (dataTess)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, dataTess);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        shaderAi::daspeka()->setInt("heightMap", 0);
-        //shaderAi::daspeka()->setInt("skycube", 0); //????
-        //shaderAi::daspeka()->setInt("cubemap", 0);//??????
-        std::cout << "\033[1;32m Loady heightmapy dataTess ba qabaray :\033[0m" << 
-            "\033[1;32m" << height << " x " << width << "\033[0m" << std::endl;
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "datatess bwny nia" << std::endl;
-    }
-    
-    
-    shaderAi::daspeka()->drwstkaProgram();
-    shaderAi::daspeka()->drwstkaShader();
-
-    shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheight.vert", shaderAi::JoryShader::VERTEX_SHADER);
-    shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheight.frag", shaderAi::JoryShader::FRAGMENT_SHADER);
-    shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheightT.tesc", shaderAi::JoryShader::TESS_CONTROL_SHADER);
-    shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheightT.tese", shaderAi::JoryShader::TESS_EVALUATION_SHADER);
-
-    shaderAi::daspeka()->bilkenaShader();
-    shaderAi::daspeka()->bibastawaShader();
+   
     //cube map
-
+        
   
     //SHADER2 -----------
 
     //not implemented yet
 
     //SHADER2------------
+   //terrain moved here//
+    //here terrain moved to//
+   GLint maxTessLevel;
+   glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &maxTessLevel);
+   std::cout << "\033[35mMax available tess level: \033[0m" << "\033[33m" << maxTessLevel << "\033[0m" << std::endl;
 
+
+
+   // shader configuration
+   // --------------------
+   //shaderAi::daspeka()->setInt("skybox", 0);
+
+   // configure global opengl state
+   // -----------------------------
+
+   //glEnable(GL_DEPTH_TEST);
+   //ShaderAi part
+
+
+  /* shaderAi::daspeka()->bilkenaShader();
+   shaderAi::daspeka()->bibastawaShader();
+
+   shaderAi::daspeka()->jyaikarawaShader();
+   shaderAi::daspeka()->lanawyBaraShader();
+   shaderAi::daspeka()->lanawyBaraProgram();*/
+
+   //shaderAi::daspeka()->drwstkaProgram();
+   //shaderAi::daspeka()->drwstkaShader();
+  /* shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.vert", shaderAi::JoryShader::VERTEX_SHADER);
+   shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.frag", shaderAi::JoryShader::FRAGMENT_SHADER);*/
+
+
+   //shaderAi::daspeka()->koikarawaShader("Shaders/shader.vert", shaderAi::JoryShader::VERTEX_SHADER);
+   //shaderAi::daspeka()->koikarawaShader("Shaders/shader.frag", shaderAi::JoryShader::FRAGMENT_SHADER);
+
+   //ShaderAi part </
+   // build and compile our shader program
+   // ------------------------------------
+   // load and create a texture
+   // -------------------------
+   //unsigned int texture;
+  // glGenTextures(1, &texture);
+  // glActiveTexture(GL_TEXTURE0);
+   //glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
+   // set the texture wrapping parameters
+   //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+   //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+   //// set texture filtering parameters
+  // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+   //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+   //load image, create texture and generate mipmaps
+   int width, height, nrChannels;
+   // The FileSystem::getPath(...) is part of the GitHub repository so we can find files on any IDE/platform; replace it with your own image path.
+   //unsigned char* dataTess = stbi_load("Textures/Fog.png", &width, &height, &nrChannels, 0);
+   unsigned char* dataTess = stbi_load("Textures/FRC.jpg", &width, &height, &nrChannels, 0);
+
+  
+
+   // set up vertex data (and buffer(s)) and configure vertex attributes
+   // ------------------------------------------------------------------
+   std::vector<float> Tvertices;
+
+   unsigned rez = 20;
+   for (unsigned i = 0; i <= rez - 1; i++)
+   {
+       for (unsigned j = 0; j <= rez - 1; j++)
+       {
+           Tvertices.push_back(-width / 2.0f + width * i / (float)rez); // v.x
+           Tvertices.push_back(0.0f); // v.y
+           Tvertices.push_back(-height / 2.0f + height * j / (float)rez); // v.z
+           Tvertices.push_back(i / (float)rez); // u
+           Tvertices.push_back(j / (float)rez); // v
+
+           Tvertices.push_back(-width / 2.0f + width * (i + 1) / (float)rez); // v.x
+           Tvertices.push_back(0.0f); // v.y
+           Tvertices.push_back(-height / 2.0f + height * j / (float)rez); // v.z
+           Tvertices.push_back((i + 1) / (float)rez); // u
+           Tvertices.push_back(j / (float)rez); // v
+
+           Tvertices.push_back(-width / 2.0f + width * i / (float)rez); // v.x
+           Tvertices.push_back(0.0f); // v.y
+           Tvertices.push_back(-height / 2.0f + height * (j + 1) / (float)rez); // v.z
+           Tvertices.push_back(i / (float)rez); // u
+           Tvertices.push_back((j + 1) / (float)rez); // v
+
+           Tvertices.push_back(-width / 2.0f + width * (i + 1) / (float)rez); // v.x
+           Tvertices.push_back(0.0f); // v.y
+           Tvertices.push_back(-height / 2.0f + height * (j + 1) / (float)rez); // v.z
+           Tvertices.push_back((i + 1) / (float)rez); // u
+           Tvertices.push_back((j + 1) / (float)rez); // v
+       }
+   }
+   std::cout << "Loaded " << rez * rez << " patches of 4 control points each" << std::endl;
+   std::cout << "Processing " << rez * rez * 4 << " vertices in vertex shader" << std::endl;
+   //GLuint textureID;
+   // first, configure the cube's VAO (and terrainVBO)
+   unsigned int terrainVAO, terrainVBO; // skyboxVAO, skyboxVBO;
+   glGenVertexArrays(1, &terrainVAO);
+   glBindVertexArray(terrainVAO);
+
+   //glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+   glGenBuffers(1, &terrainVBO);
+   glBindBuffer(GL_ARRAY_BUFFER, terrainVBO);
+   glBufferData(GL_ARRAY_BUFFER, sizeof(float) * Tvertices.size(), &Tvertices[0], GL_STATIC_DRAW);
+
+   // position attribute
+   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+   glEnableVertexAttribArray(0);
+   // texCoord attribute
+   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(sizeof(float) * 3));
+   glEnableVertexAttribArray(1);
+
+   glPatchParameteri(GL_PATCH_VERTICES, NUM_PATCH_PTS);
+
+   // Set texture parameters
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+   // Load texture data and upload to GPU
+   if (dataTess)
+   {
+       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+           GL_UNSIGNED_BYTE, dataTess);
+       glGenerateMipmap(GL_TEXTURE_2D);
+       shaderAi::daspeka()->setInt("heightMap", 0);
+       //shaderAi::daspeka()->setInt("skycube", 0); //????
+       //shaderAi::daspeka()->setInt("cubemap", 0);//??????
+       std::cout << "\033[1;32m Loady heightmapy dataTess ba qabaray :\033[0m" <<
+           "\033[1;32m" << height << " x " << width << "\033[0m" << std::endl;
+       //glGenerateMipmap(GL_TEXTURE_2D);
+   }
+   else
+   {
+       std::cout << "datatess bwny nia" << std::endl;
+   }
+
+
+
+
+   //shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.vert", shaderAi::JoryShader::VERTEX_SHADER);
+   //shaderAi::daspeka()->koikarawaShader("Shaders/skyBox.frag", shaderAi::JoryShader::FRAGMENT_SHADER);  
+   shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheight.vert", shaderAi::JoryShader::VERTEX_SHADER);
+   shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheight.frag", shaderAi::JoryShader::FRAGMENT_SHADER);
+   shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheightT.tesc", shaderAi::JoryShader::TESS_CONTROL_SHADER);
+   shaderAi::daspeka()->koikarawaShader("Shaders/8.3.gpuheightT.tese", shaderAi::JoryShader::TESS_EVALUATION_SHADER);
+   shaderAi::daspeka()->bilkenaShader(); //Attach (idprog,idShaderaka) 
+   shaderAi::daspeka()->bibastawaShader(); //glLinkProgram(idprog) glUseProgram(idprog) 
+
+
+
+  // shaderAi::daspeka()->jyaikarawaShader();
+   //</here terrain moved to
+   //</terrain moved here//
     SDL_Event event;
     float deltaTime = 0.0f;
     float lastFrame = 0.0f;
 
     const int FPS = 60;
-    const int frameDelay = 1000 / FPS;
+    const int frameDelay = 1000/ FPS;
 
     Uint32 frameStart;
     int frameTime;
 
-
     while (running) {
         //glViewport(0,0,800,800); 
-        glClearColor(0.15f, 0.1f, 0.1f, 1.0f);
+        glClearColor(0.2f, 0.1f, 0.1f, 0.1f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        static int framesUntilNextRandomUpdate = 10; // Adjust as needed
+        if (framesUntilNextRandomUpdate <= 0) {
+            updateRandomCamera(camera);
+            framesUntilNextRandomUpdate = 5; // Reset the counter
+        }
 
+        framesUntilNextRandomUpdate--;
         float currentFrame = SDL_GetTicks();
         scroll_callback(&event);
         while (SDL_PollEvent(&event)) {
@@ -1849,16 +2139,16 @@ int main(int argc, char* argv[])
                     running = false;
                     break;
                 case SDLK_w:
-                    camera.ProcessKeyboard(FORWARD, deltaTime);
+                    camera.ProcessKeyboard(Camera_Movement::FORWARD, deltaTime);
                     break;
                 case SDLK_s:
-                    camera.ProcessKeyboard(BACKWARD, deltaTime);
+                    camera.ProcessKeyboard(Camera_Movement::BACKWARD, deltaTime);
                     break;
                 case SDLK_a:
-                    camera.ProcessKeyboard(LEFT, deltaTime);
+                    camera.ProcessKeyboard(Camera_Movement::LEFT, deltaTime);
                     break;
                 case SDLK_d:
-                    camera.ProcessKeyboard(RIGHT, deltaTime);
+                    camera.ProcessKeyboard(Camera_Movement::RIGHT, deltaTime);
                     break;
                     // Add more key bindings as needed
                 case SDLK_r:
@@ -1869,8 +2159,19 @@ int main(int argc, char* argv[])
                     //fill frame
                     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
                     break;
-                }
+                case SDLK_t:
+                    //wireframe
+                    swranawa = false;
 
+                    break;
+                case SDLK_g:
+                    //fill frame
+                    swranawa = true;
+
+                    break;
+                   
+                }
+                
             case SDL_MOUSEMOTION:
                 mouse_callback(&event);
 
@@ -1933,85 +2234,156 @@ int main(int argc, char* argv[])
         if (frameDelay > frameTime) {
             SDL_Delay(frameDelay - frameTime);
         }
-       
-        // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 10000.0f);
 
+
+        //shaderAi::daspeka()->bakaryBena();
+        // view/projection transformations
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f),
+            (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.01f, 10000.0f);
         glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 viewSky = camera2.GetViewMatrix();
+
         /*glm::mat4 view = camera2.GetViewMatrix();*/
-        shaderAi::daspeka()->setMat4("projection", projection);
-        shaderAi::daspeka()->setMat4("view", view);
+
+        
+        
         // world transformation
         glm::mat4 position;
         glm::mat4 model = glm::mat4(1.0f);
         shaderAi::daspeka()->setMat4("model", model);
         shaderAi::daspeka()->setVec3("cameraPos", camera.Position);
-
+        shaderAi::daspeka()->set("view", view);
+        shaderAi::daspeka()->set("projection", projection);
+        shaderAi::daspeka()->set("heightMap", 0);
+        
+        
+        
         // Draw skybox
-        glm::mat4 modelSky = glm::mat4(1.0f);
-        bool isEnableDepthTest = false;
-        if (glIsEnabled(GL_DEPTH_TEST)) {
-            isEnableDepthTest = true;
-            std::cout << "\033[36m\nGl depth test enabled" << "\033[33m" << std::endl;
-        }
+       
+        //glIsEnabled(GL_DEPTH_TEST));
+        //glDisable(GL_DEPTH_TEST);
 
-        glDisable(GL_DEPTH_TEST);
+        
 
-        shaderAi::daspeka()->bakaryBena();
-
-        shaderAi::daspeka()->setMat4("modelSky", modelSky);
-        view = camera.GetViewMatrix();
-        //projection = glm::perspective(glm::radians(45.0f), aspectRatio, 0.01f, 10000.0f);
-        shaderAi::daspeka()->set("viewSky", view);
-        shaderAi::daspeka()->set("projectionSky", projection);
+        //view = camera.GetViewMatrix();
+       // projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT,
+           // 0.1f, 100000.0f);
 
         
 
         // <Skytexture>
-        shaderAi::daspeka()->set("heightMap", 0);
-        shaderAi::daspeka()->setInt("skybox", 0);
+        
 
-        cubemapTexture = loadCubemap(faces, defaultFace);
+        //cubemapTexture = loadCubemap(faces, defaultFace);
 
-        glGenVertexArrays(1, &skyboxVAO);
-        glGenBuffers(1, &skyboxVBO);
-        glBindVertexArray(skyboxVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-        glBindVertexArray(0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+       
         // </Skytexture//
-        //glDepthFunc(GL_LEQUAL);
-        glDepthMask(GL_FALSE);
+      
+        //glDepthMask(GL_FALSE);
 
         glBindVertexArray(terrainVAO);
         glDrawArrays(GL_PATCHES, 0, NUM_PATCH_PTS* rez* rez);
         glBindVertexArray(0);
 
-
         //drawSkybox
+        glDepthFunc(GL_LEQUAL);
+        /*
+        1-Turn on the depth mask glDepthMask( GL_TRUE )
+        2-Draw all opaque objects, in any order
+        3-Turn off the depth mask glDepthMask( GL_FALSE )
+        4-Turn on a BLEND_MODE --:|> glDisable( GL_BLEND ); 
+        5-Draw translucent objects sorted from furthest away to nearest
+        */
+        glm::mat4 modelSky = glm::mat4(1.0f);
+        shaderAi::daspeka()->set("model", modelSky);
+        glGenVertexArrays(1, &skyboxVAO);
         glBindVertexArray(skyboxVAO);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
-        glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices for a cube
-        if (isEnableDepthTest) { glEnable(GL_DEPTH_TEST); }
-        //glDepthMask(GL_TRUE);
+        GLenum error = glGetError();
 
-        glBindVertexArray(0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-        glClear(GL_DEPTH_BUFFER_BIT);
+        error = glGetError();
+        if (error != GL_NO_ERROR) {
+            // Handle or log the error
+            std::cerr << "Error binding VAO: " << error << std::endl;
+        }
 
-       // glDepthMask(GL_FALSE);
-        //glDepthFunc(GL_LEQUAL);
-        // render the terrain
+        glGenBuffers(1, &skyboxVBO);
+
        
+        // Bind the VBO for the skybox vertices
+        glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+        error = glGetError();
+        if (error != GL_NO_ERROR) {
+            // Handle or log the error
+            std::cerr << "Error binding VBO: " << error << std::endl;
+        }
+        // Set up vertex attribute pointers
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+        error = glGetError();
+        if (error != GL_NO_ERROR) {
+            // Handle or log the error
+            std::cerr << "Error ama glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);: " << error << std::endl;
+        }
+        
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        viewSky = camera.GetViewMatrix();
+
+        // Bind the VAO for the skybox
+        //shaderAi::daspeka()->bakaryBena();
+        shaderAi::daspeka()->set("projectionSky", projection);
+        shaderAi::daspeka()->set("viewSky", viewSky);
+        shaderAi::daspeka()->set("skybox", 0);
+
+        //shaderAi::daspeka()->bakaryBena();
+          //glActiveTexture(GL_TEXTURE0);
+          //glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        if (error != GL_NO_ERROR) {
+            // Handle or log the error
+            std::cerr << "Error bakaryBena Line 2274" << error << std::endl;
+        }
+   
+        // Set up vertex attribute pointers OR Set the cubemap texture, same thing 
+        glActiveTexture(GL_TEXTURE0);
+        
+        error = glGetError();
+        if (error != GL_NO_ERROR) {
+            // Handle or log the error
+            std::cerr << "Error GL_TEXTURE0: " << error << std::endl;
+        }
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+        error = glGetError();
+        if (error != GL_NO_ERROR) {
+            // Handle or log the error
+            std::cerr << "Error binding texture: " << error << std::endl;
+        }
+
+        // Disable writing to the depth buffer
+        //glDepthMask(GL_FALSE);
+        glDepthMask(GL_TRUE);
+        error = glGetError();
+        if (error != GL_NO_ERROR) {
+            // Handle or log the error
+            std::cerr << "Error disabling depth mask: " << error << std::endl;
+        }
+        // Render the skybox
+        glDrawArrays(GL_TRIANGLES, 0, 36); // 36 vertices for a cube
+
+        error = glGetError();
+        if (error != GL_NO_ERROR) {
+            // Handle or log the error
+            std::cerr << "Error drawing skybox: " << error << std::endl;
+        }
+       //glDepthMask(GL_TRUE);
+        glDepthFunc(GL_LESS);
+        // render the terrain
+        glDepthMask(GL_FALSE);
+        glDisable(GL_BLEND);
         SDL_GL_SwapWindow(window);
     }
  
-   //glDeleteVertexArrays(1, &terrainVAO);
-    //glDeleteBuffers(1, &terrainVBO);
+    glDeleteVertexArrays(1, &terrainVAO);
+    glDeleteVertexArrays(1, &skyboxVAO);
+    glDeleteBuffers(1, &terrainVBO);
+    glDeleteBuffers(1, &skyboxVBO);
 
     shaderAi::daspeka()->jyaikarawaShader();
     shaderAi::daspeka()->lanawyBaraShader();
